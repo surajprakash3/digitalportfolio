@@ -7,10 +7,16 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react'],
-          'chart-vendor': ['chart.js', 'react-chartjs-2'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/framer-motion') || id.includes('node_modules/lucide-react')) {
+            return 'ui-vendor';
+          }
+          if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2')) {
+            return 'chart-vendor';
+          }
         },
       },
     },
