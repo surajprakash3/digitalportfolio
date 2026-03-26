@@ -58,7 +58,6 @@ blogPostSchema.pre('validate', function (next) {
   next();
 });
 
-blogPostSchema.index({ slug: 1 });
 blogPostSchema.index({ published: 1, createdAt: -1 });
 blogPostSchema.index({ tags: 1 });
 
