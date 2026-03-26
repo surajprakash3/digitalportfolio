@@ -1,9 +1,12 @@
+import 'dotenv/config';
 import asyncHandler from 'express-async-handler';
 import Profile from '../models/Profile.js';
 
 const isCloudinaryConfigured =
   process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name';
+  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET;
 
 // @desc    Get profile (public)
 // @route   GET /api/profile
