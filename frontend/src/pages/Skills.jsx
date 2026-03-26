@@ -7,9 +7,69 @@ const isValidIcon = (iconStr) => {
   return iconStr && iconStr !== 'null' && iconStr !== 'undefined' && iconStr.trim() !== '';
 };
 
+// Map skill names to devicon identifiers for auto-generated icons
+const DEVICON_MAP = {
+  'html': 'html5', 'html5': 'html5', 'css': 'css3', 'css3': 'css3',
+  'javascript': 'javascript', 'js': 'javascript', 'typescript': 'typescript', 'ts': 'typescript',
+  'react': 'react', 'react.js': 'react', 'reactjs': 'react', 'react native': 'react',
+  'next.js': 'nextjs', 'nextjs': 'nextjs', 'next': 'nextjs',
+  'vue': 'vuejs', 'vue.js': 'vuejs', 'vuejs': 'vuejs',
+  'angular': 'angular', 'angularjs': 'angularjs',
+  'svelte': 'svelte', 'node': 'nodejs', 'node.js': 'nodejs', 'nodejs': 'nodejs',
+  'express': 'express', 'express.js': 'express', 'expressjs': 'express',
+  'python': 'python', 'java': 'java', 'c': 'c', 'c++': 'cplusplus', 'cpp': 'cplusplus',
+  'c#': 'csharp', 'csharp': 'csharp', 'go': 'go', 'golang': 'go',
+  'rust': 'rust', 'ruby': 'ruby', 'php': 'php', 'swift': 'swift',
+  'kotlin': 'kotlin', 'dart': 'dart', 'flutter': 'flutter', 'r': 'r',
+  'mongodb': 'mongodb', 'mongo': 'mongodb', 'mysql': 'mysql',
+  'postgresql': 'postgresql', 'postgres': 'postgresql',
+  'redis': 'redis', 'sqlite': 'sqlite', 'firebase': 'firebase',
+  'docker': 'docker', 'kubernetes': 'kubernetes', 'k8s': 'kubernetes',
+  'aws': 'amazonwebservices', 'azure': 'azure', 'gcp': 'googlecloud', 'google cloud': 'googlecloud',
+  'git': 'git', 'github': 'github', 'gitlab': 'gitlab', 'bitbucket': 'bitbucket',
+  'linux': 'linux', 'ubuntu': 'ubuntu', 'bash': 'bash',
+  'nginx': 'nginx', 'apache': 'apache',
+  'figma': 'figma', 'sketch': 'sketch', 'photoshop': 'photoshop',
+  'illustrator': 'illustrator', 'xd': 'xd',
+  'tailwind': 'tailwindcss', 'tailwindcss': 'tailwindcss', 'tailwind css': 'tailwindcss',
+  'bootstrap': 'bootstrap', 'sass': 'sass', 'scss': 'sass', 'less': 'less',
+  'webpack': 'webpack', 'vite': 'vitejs', 'babel': 'babel',
+  'npm': 'npm', 'yarn': 'yarn', 'pnpm': 'pnpm',
+  'jest': 'jest', 'mocha': 'mocha', 'cypress': 'cypressio',
+  'graphql': 'graphql', 'rest api': 'fastapi', 'fastapi': 'fastapi',
+  'django': 'django', 'flask': 'flask', 'spring': 'spring', 'spring boot': 'spring',
+  'laravel': 'laravel', 'rails': 'rails', 'ruby on rails': 'rails',
+  'tensorflow': 'tensorflow', 'pytorch': 'pytorch',
+  'pandas': 'pandas', 'numpy': 'numpy', 'jupyter': 'jupyter',
+  'heroku': 'heroku', 'vercel': 'vercel', 'netlify': 'netlify',
+  'jira': 'jira', 'confluence': 'confluence', 'trello': 'trello',
+  'slack': 'slack', 'vscode': 'vscode', 'visual studio code': 'vscode',
+  'intellij': 'intellij', 'android': 'android', 'ios': 'apple',
+  'unity': 'unity', 'unreal': 'unrealengine',
+  'three.js': 'threejs', 'threejs': 'threejs',
+  'socket.io': 'socketio', 'socketio': 'socketio',
+  'postman': 'postman', 'insomnia': 'insomnia',
+  'material ui': 'materialui', 'mui': 'materialui',
+  'redux': 'redux', 'mobx': 'mobx',
+  'electron': 'electron', 'deno': 'denojs',
+  'supabase': 'supabase', 'prisma': 'prisma',
+  'mongoose': 'mongoose',
+  'vs code': 'vscode', 'visual studio': 'visualstudio',
+  'tailwind': 'tailwindcss', 'tailwindcss': 'tailwindcss', 'tailwind css': 'tailwindcss',
+};
+
+const getDeviconUrl = (skillName) => {
+  const key = skillName.toLowerCase().trim();
+  const deviconName = DEVICON_MAP[key];
+  if (deviconName) {
+    return `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${deviconName}/${deviconName}-original.svg`;
+  }
+  return null;
+};
+
 const SkillItem = ({ skill, getImageUrl }) => {
   const [imgError, setImgError] = useState(false);
-  const proficiency = skill.proficiency || 80;
+  const [deviconError, setDeviconError] = useState(false);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -44,55 +104,64 @@ const SkillItem = ({ skill, getImageUrl }) => {
     visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, type: "spring", stiffness: 100 } },
   };
 
-  if (isValidIcon(skill.icon) && !imgError) {
-    return (
-      <motion.div variants={childVariants} className="relative z-20">
+  // Determine the icon source: stored icon > devicon > first letter fallback
+  const hasStoredIcon = isValidIcon(skill.icon) && !imgError;
+  const deviconUrl = getDeviconUrl(skill.name);
+  const hasDevicon = deviconUrl && !deviconError;
+  const iconSrc = hasStoredIcon ? getImageUrl(skill.icon) : (hasDevicon ? deviconUrl : null);
+
+  return (
+    <motion.div variants={childVariants} className="relative z-20">
+      <motion.div
+        style={{
+          x: translateX,
+          y: translateY,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 150,
+          damping: 15
+        }}
+      >
         <motion.div
-          style={{
-            x: translateX,
-            y: translateY,
+          animate={{
+            y: [0, -8, 0],
           }}
           transition={{
+            y: {
+              duration: 3 + (skill.name.length % 3 * 0.5),
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: (skill.name.length % 5) * 0.2
+            },
             type: "spring",
-            stiffness: 150,
-            damping: 15
+            stiffness: 400,
+            damping: 10
           }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            rotateX,
+            rotateY,
+            transformStyle: "preserve-3d",
+          }}
+          whileHover={{
+            scale: 1.1,
+            boxShadow: "0 0 20px 2px rgba(56, 189, 248, 0.4)",
+            borderColor: "rgba(56, 189, 248, 0.6)",
+            z: 40
+          }}
+          className="flex-shrink-0 flex flex-col items-center justify-center p-3 w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] bg-theme-bg backdrop-blur-sm rounded-2xl border border-theme-border shadow-theme-glow-sm transition-colors cursor-pointer relative group/icon"
         >
-          <motion.div
-            animate={{
-              y: [0, -8, 0],
-            }}
-            transition={{
-              y: {
-                duration: 3 + (skill.name.length % 3 * 0.5),
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: (skill.name.length % 5) * 0.2
-              },
-              type: "spring",
-              stiffness: 400,
-              damping: 10
-            }}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              rotateX,
-              rotateY,
-              transformStyle: "preserve-3d",
-            }}
-            whileHover={{
-              scale: 1.1,
-              boxShadow: "0 0 20px 2px rgba(56, 189, 248, 0.4)",
-              borderColor: "rgba(56, 189, 248, 0.6)",
-              z: 40
-            }}
-            className="flex-shrink-0 flex items-center justify-center p-3 w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] bg-theme-bg backdrop-blur-sm rounded-2xl border border-theme-border shadow-theme-glow-sm transition-colors cursor-pointer relative group/icon"
-          >
+          {iconSrc ? (
             <motion.img
-              src={getImageUrl(skill.icon)}
+              src={iconSrc}
               alt={skill.name}
               className="w-10 h-10 sm:w-12 sm:h-12 object-contain relative z-10"
-              onError={() => setImgError(true)}
+              onError={() => {
+                if (hasStoredIcon) setImgError(true);
+                else setDeviconError(true);
+              }}
               whileHover={{
                 rotate: [0, -10, 10, 0],
                 scale: 1.15
@@ -105,42 +174,18 @@ const SkillItem = ({ skill, getImageUrl }) => {
                 transform: "translateZ(30px)"
               }}
             />
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-500/10 to-blue-500/10 opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none"></div>
-          </motion.div>
+          ) : (
+            <span className="text-2xl sm:text-3xl font-bold text-accent-400 relative z-10" style={{ transform: "translateZ(30px)" }}>
+              {skill.name.charAt(0).toUpperCase()}
+            </span>
+          )}
+          {/* Skill name tooltip */}
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-theme-muted opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none bg-theme-card/90 px-2 py-1 rounded-md border border-theme-border shadow-lg z-30">
+            {skill.name}
+          </div>
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-500/10 to-blue-500/10 opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none"></div>
         </motion.div>
       </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      variants={childVariants}
-      className="group/skill w-full"
-    >
-      <div className="flex justify-between items-end mb-2">
-        <motion.div
-          className="flex items-center gap-3"
-          whileHover={{ x: 5 }}
-        >
-          {isValidIcon(skill.icon) && !imgError ? (
-            <div className="w-8 h-8 rounded-lg bg-theme-bg p-1.5 border border-theme-border flex items-center justify-center shadow-theme-glow-sm">
-              <img src={getImageUrl(skill.icon)} alt={skill.name} className="w-full h-full object-contain" onError={() => setImgError(true)} />
-            </div>
-          ) : null}
-          <span className="font-bold text-theme-text">{skill.name}</span>
-        </motion.div>
-        <span className="text-xs font-bold text-theme-muted tabular-nums">{proficiency}%</span>
-      </div>
-
-      <div className="h-2 w-full bg-theme-border rounded-full overflow-hidden border border-theme-border p-[1px]">
-        <motion.div
-          initial={{ width: 0 }}
-          whileInView={{ width: `${proficiency}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-          className="h-full rounded-full bg-gradient-to-r from-accent-500 to-blue-500 shadow-[0_0_15px_rgba(56,189,248,0.5)]"
-        />
-      </div>
     </motion.div>
   );
 };
