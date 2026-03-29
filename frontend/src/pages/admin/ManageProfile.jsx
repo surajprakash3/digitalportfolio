@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Upload, User, Briefcase, MapPin, Globe, Github, Linkedin, Twitter, Mail, Wand2, Plus, Minus, ArrowRight, Download, Eye, Layout, FileText, SplitSquareHorizontal, ShieldAlert, Sparkles, Navigation, CheckCircle } from 'lucide-react';
-import { getProfile, updateProfile } from '../../services/api';
+import { useProfile } from '../../hooks/useProfile';
+import { getImageUrl } from '../../utils/imageUtils';
+import * as profileService from '../../services/profileService';
+import * as resumeService from '../../services/resumeService';
 
 class ManageProfileErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
@@ -58,56 +61,49 @@ const ManageProfileInner = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeName, setResumeName] = useState('');
 
-  const [loading, setLoading] = useState(true);
+  const { data: profile, loading, refetch: fetchProfile } = useProfile();
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        
-        if (data.hero) {
-            setHeroForm({
-                fullName: data.hero.fullName || '',
-                roles: data.hero.roles?.length ? data.hero.roles : ['Full Stack Developer'],
-                tagline: data.hero.tagline || '',
-                shortDescription: data.hero.shortDescription || '',
-                stats: data.hero.stats || { projects: '10+', experience: '3+ Years', contributions: '50+' },
-                availability: data.hero.availability !== false
-            });
-            if (data.hero.profileImage) setImagePreview(data.hero.profileImage);
+    if (profile) {
+      if (profile.hero) {
+        setHeroForm({
+          fullName: profile.hero.fullName || '',
+          roles: profile.hero.roles?.length ? profile.hero.roles : ['Full Stack Developer'],
+          tagline: profile.hero.tagline || '',
+          shortDescription: profile.hero.shortDescription || '',
+          stats: profile.hero.stats || { projects: '10+', experience: '3+ Years', contributions: '50+' },
+          availability: profile.hero.availability !== false
+        });
+        if (profile.hero.profileImage) {
+          setImagePreview(getImageUrl(profile.hero.profileImage));
         }
-
-        if (data.about) {
-            setAboutForm({
-                paragraph1: data.about.paragraph1 || '',
-                paragraph2: data.about.paragraph2 || '',
-                paragraph3: data.about.paragraph3 || '',
-                skillsSummary: data.about.skillsSummary || '',
-                focusArea: data.about.focusArea || '',
-                personalStatement: data.about.personalStatement || '',
-                quickInfo: data.about.quickInfo || { location: '', education: '', experience: '' },
-                highlights: data.about.highlights?.length ? data.about.highlights : ['Problem Solving']
-            });
-        }
-
-        if (data.socials) {
-            setSocialsForm({
-                githubUrl: data.socials.githubUrl || '',
-                linkedinUrl: data.socials.linkedinUrl || '',
-                twitterUrl: data.socials.twitterUrl || '',
-                email: data.socials.email || ''
-            });
-        }
-      } catch (err) {
-        console.error('Error loading profile:', err);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchProfile();
-  }, []);
+
+      if (profile.about) {
+        setAboutForm({
+          paragraph1: profile.about.paragraph1 || '',
+          paragraph2: profile.about.paragraph2 || '',
+          paragraph3: profile.about.paragraph3 || '',
+          skillsSummary: profile.about.skillsSummary || '',
+          focusArea: profile.about.focusArea || '',
+          personalStatement: profile.about.personalStatement || '',
+          quickInfo: profile.about.quickInfo || { location: '', education: '', experience: '' },
+          highlights: profile.about.highlights?.length ? profile.about.highlights : ['Problem Solving']
+        });
+      }
+
+      if (profile.socials) {
+        setSocialsForm({
+          githubUrl: profile.socials.githubUrl || '',
+          linkedinUrl: profile.socials.linkedinUrl || '',
+          twitterUrl: profile.socials.twitterUrl || '',
+          email: profile.socials.email || ''
+        });
+      }
+    }
+  }, [profile]);
 
   const handleHeroChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -197,12 +193,7 @@ const ManageProfileInner = () => {
       if (resumeFile) {
         const resumeFormData = new FormData();
         resumeFormData.append('resume', resumeFile);
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        await fetch(`${API_URL}/resume/upload`, {
-            method: 'POST',
-            body: resumeFormData,
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await resumeService.uploadResume(resumeFormData);
       }
 
       const formData = new FormData();
@@ -224,9 +215,10 @@ const ManageProfileInner = () => {
         formData.append('profileImage', imageFile);
       }
 
-      await updateProfile(formData);
+      await profileService.updateProfile(formData);
       setSuccess('Profile updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
+      fetchProfile();
     } catch (err) {
       console.error('Error updating profile:', err);
       alert('Failed to update profile');

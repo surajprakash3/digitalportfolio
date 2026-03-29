@@ -1,31 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Tag } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { getPostBySlug } from '../services/api';
+import { useBlogPost } from '../hooks/useBlog';
+import { getImageUrl } from '../utils/imageUtils';
 import SEO from '../components/SEO';
 import LazyImage from '../components/LazyImage';
 
 const BlogDetail = () => {
   const { slug } = useParams();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const data = await getPostBySlug(slug);
-        setPost(data);
-      } catch (err) {
-        setError(err.response?.status === 404 ? 'Post not found' : 'Error loading post');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPost();
-  }, [slug]);
+  const { data: post, loading, error } = useBlogPost(slug);
 
   if (loading) {
     return (
@@ -46,14 +31,6 @@ const BlogDetail = () => {
     );
   }
 
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return `${BASE_URL}${url}`;
-  };
-
   return (
     <>
       <SEO 
@@ -61,7 +38,7 @@ const BlogDetail = () => {
         description={post.excerpt}
         url={`/blog/${post.slug}`}
         type="article"
-        image={post.coverImage || '/og-image.png'}
+        image={getImageUrl(post.coverImage) || '/og-image.png'}
       />
       <article className="py-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

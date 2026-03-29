@@ -20,8 +20,11 @@ import profileRoutes from './routes/profileRoutes.js';
 import certificationRoutes from './routes/certificationRoutes.js';
 import socialRoutes from './routes/socialRoutes.js';
 
+console.log('Starting server...');
 // Connect to database
+console.log('Connecting to DB...');
 connectDB();
+console.log('DB connection initiated.');
 
 const app = express();
 
@@ -37,8 +40,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files statically (fallback when Cloudinary is not configured)
+// Serve uploaded files statically with CORS/ORB headers
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Apply headers to /uploads regardless of whether file exists (to fix ORB on 404)
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Security & performance headers
@@ -74,6 +86,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
+console.log(`Preparing to listen on port ${PORT}...`);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

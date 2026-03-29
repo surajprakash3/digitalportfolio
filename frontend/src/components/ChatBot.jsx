@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
-import { sendChatMessage } from '../services/api';
+import * as chatService from '../services/chatService';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +31,7 @@ const ChatBot = () => {
     setIsTyping(true);
 
     try {
-      const data = await sendChatMessage(trimmed, messages);
+      const data = await chatService.sendChatMessage(trimmed, messages);
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch {
       setMessages(prev => [...prev, { 

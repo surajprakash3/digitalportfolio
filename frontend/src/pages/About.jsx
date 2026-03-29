@@ -1,25 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Code2, MapPin, GraduationCap, Briefcase, Zap } from 'lucide-react';
-import { getProfile } from '../services/api';
+import { useProfile } from '../hooks/useProfile';
 
 const About = () => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profile, loading } = useProfile();
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        setProfile(data);
-      } catch (err) {
-        console.error('Error loading profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
 
   if (loading) return null; // Wait to load, Home.jsx handles initial skeleton
 

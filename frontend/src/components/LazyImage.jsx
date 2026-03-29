@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { getImageUrl } from '../utils/imageUtils';
 
 const LazyImage = ({ 
-  src, 
+  src: initialSrc, 
   alt, 
   className = '', 
   width,
@@ -14,11 +15,12 @@ const LazyImage = ({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef(null);
 
+  // Use centralized utility first to ensure base URL and normalization
+  const src = getImageUrl(initialSrc);
+
   // Optimize Cloudinary URLs with auto format/quality
   const getOptimizedSrc = (url) => {
     if (!cloudinaryTransform || !url || !url.includes('cloudinary')) return url;
-    
-    // Insert f_auto,q_auto transformations
     return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
   };
 

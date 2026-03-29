@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, X, Globe, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
-import { getSocials, createSocial, updateSocial, deleteSocial } from '../../services/api';
+import { useSocials } from '../../hooks/useSocials';
+import { getImageUrl } from '../../utils/imageUtils';
+import * as socialService from '../../services/socialService';
 
 const CATEGORIES = [
   'Professional Platforms',
@@ -11,7 +13,7 @@ const CATEGORIES = [
   'Other'
 ];
 
-const ManageSocialImage = ({ social, getImageUrl, isValidIcon }) => {
+const ManageSocialImage = ({ social, isValidIcon }) => {
   const [imgError, setImgError] = useState(false);
   const valid = isValidIcon(social.icon) && !imgError;
 
@@ -23,8 +25,8 @@ const ManageSocialImage = ({ social, getImageUrl, isValidIcon }) => {
 };
 
 const ManageSocial = () => {
-  const [socials, setSocials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, refetch: fetchSocials } = useSocials();
+  const socials = data || [];
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -35,22 +37,6 @@ const ManageSocial = () => {
     category: 'Professional Platforms',
     icon: null
   });
-
-  const fetchSocials = async () => {
-    try {
-      const data = await getSocials();
-      setSocials(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error fetching socials:', err);
-      setSocials([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSocials();
-  }, []);
 
   const resetForm = () => {
     setForm({
@@ -77,9 +63,9 @@ const ManageSocial = () => {
       }
 
       if (editing) {
-        await updateSocial(editing, formData);
+        await socialService.updateSocial(editing, formData);
       } else {
-        await createSocial(formData);
+        await socialService.createSocial(formData);
       }
       resetForm();
       fetchSocials();
@@ -103,19 +89,11 @@ const ManageSocial = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this social link?')) return;
     try {
-      await deleteSocial(id);
+      await socialService.deleteSocial(id);
       fetchSocials();
     } catch (err) {
       alert(err.response?.data?.message || 'Error deleting social link');
     }
-  };
-
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return `${BASE_URL}${url}`;
   };
 
   const isValidIcon = (iconStr) => {
@@ -224,7 +202,7 @@ const ManageSocial = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={social._id} className="group relative flex items-center p-4 bg-white dark:bg-dark-800 rounded-2xl border border-slate-200 dark:border-dark-700 hover:border-accent-500/50 hover:shadow-lg hover:shadow-accent-500/5 transition-all">
                       
                       <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-dark-900 border border-slate-100 dark:border-dark-600 flex items-center justify-center shrink-0 overflow-hidden p-2.5 mr-4">
-                        <ManageSocialImage social={social} getImageUrl={getImageUrl} isValidIcon={isValidIcon} />
+                        <ManageSocialImage social={social} isValidIcon={isValidIcon} />
                       </div>
 
                       <div className="flex-1 min-w-0">

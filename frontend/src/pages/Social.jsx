@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Github, Linkedin, Twitter, Mail, ExternalLink } from 'lucide-react';
-import { getSocials } from '../services/api';
+import { useSocials } from '../hooks/useSocials';
 
 const CATEGORIES = [
   'Professional Platforms',
@@ -11,42 +11,26 @@ const CATEGORIES = [
   'Other'
 ];
 
-const SocialIcon = ({ url, platform, localIcon, className = "w-5 h-5" }) => {
+const SocialIcon = ({ platform, icon, className }) => {
   const [imgError, setImgError] = useState(false);
-  const isValidIcon = localIcon && localIcon !== 'null' && localIcon !== 'undefined' && localIcon.trim() !== '' && !imgError;
-
-  if (isValidIcon) {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return <img src={localIcon.startsWith('http') ? localIcon : `${BASE_URL}${localIcon}`} alt={platform || 'Social'} className={`${className} object-contain`} onError={() => setImgError(true)} />;
+  const localIcon = getImageUrl(icon);
+  
+  if (localIcon && !imgError) {
+    return <img src={localIcon} alt={platform || 'Social'} className={`${className} object-contain`} onError={() => setImgError(true)} />;
   }
 
   const p = (platform || '').toLowerCase();
   if (p.includes('github')) return <Github className={className} />;
   if (p.includes('linkedin')) return <Linkedin className={className} />;
   if (p.includes('twitter') || p.includes('x')) return <Twitter className={className} />;
-  if (p.includes('mail') || (url && url.includes('mailto:'))) return <Mail className={className} />;
+  if (p.includes('mail')) return <Mail className={className} />;
 
   return <Globe className={className} />;
 };
 
 const Social = () => {
-  const [socials, setSocials] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSocials = async () => {
-      try {
-        const data = await getSocials();
-        setSocials(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Error fetching socials:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSocials();
-  }, []);
+  const { data, loading, error } = useSocials();
+  const socials = data || [];
 
   const getCategorized = (category) => {
     return socials.filter(s => s.category === category);

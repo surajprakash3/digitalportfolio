@@ -28,6 +28,9 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // Strict 5MB limit to prevent Free-Tier rejections hanging the stream
+});
 
 export { cloudinary, upload };

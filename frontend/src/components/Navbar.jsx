@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, Menu, X, Github, Linkedin, Twitter, Palette, Check, SlidersHorizontal } from 'lucide-react';
-import { getProfile } from '../services/api';
+import { useProfile } from '../hooks/useProfile';
 import { useBackground } from '../context/BackgroundContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const { data: profile } = useProfile();
   const [hoveredPath, setHoveredPath] = useState(null);
   const location = useLocation();
   const { currentBg, setCurrentBg, backgrounds, bgOpacity, setBgOpacity } = useBackground();
@@ -30,17 +30,6 @@ const Navbar = () => {
     }
   }, [isDark]);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        setProfile(data);
-      } catch (err) {
-        console.error('Error fetching profile for navbar:', err);
-      }
-    };
-    fetchProfile();
-  }, []);
 
   const toggleDarkMode = () => setIsDark(!isDark);
   const toggleMenu = () => setIsOpen(!isOpen);

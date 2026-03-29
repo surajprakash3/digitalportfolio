@@ -1,26 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Mail, Calendar, Eye, EyeOff } from 'lucide-react';
-import { getContacts, deleteContact } from '../../services/api';
+import { useMessages } from '../../hooks/useMessages';
+import * as messageService from '../../services/messageService';
 
 const ManageMessages = () => {
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchMessages = async () => {
-    try {
-      const data = await getContacts();
-      setMessages(Array.isArray(data) ? data : []);
-    } catch { setMessages([]); }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchMessages(); }, []);
+  const { data, loading, refetch: fetchMessages } = useMessages();
+  const messages = data || [];
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this message?')) return;
     try {
-      await deleteContact(id);
+      await messageService.deleteMessage(id);
       fetchMessages();
     } catch (err) {
       alert(err.response?.data?.message || 'Error deleting message');

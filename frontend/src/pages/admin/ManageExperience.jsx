@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, Calendar, MapPin, Briefcase, GraduationCap, Link, PlusCircle } from 'lucide-react';
-import { getExperiences, createExperience, updateExperience, deleteExperience } from '../../services/api';
+import { Plus, Pencil, Trash2, X, Calendar, MapPin, Briefcase, GraduationCap, Link, PlusCircle, Image as ImageIcon, Building2 } from 'lucide-react';
+import { useExperiences } from '../../hooks/useExperiences';
+import { getImageUrl } from '../../utils/imageUtils';
+import * as experienceService from '../../services/experienceService';
 
 const ManageExperience = () => {
-  const [experiences, setExperiences] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, refetch: fetchExperiences } = useExperiences();
+  const experiences = data || [];
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   
@@ -29,16 +31,6 @@ const ManageExperience = () => {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
-
-  const fetchExperiences = async () => {
-    try {
-      const data = await getExperiences();
-      setExperiences(Array.isArray(data) ? data : []);
-    } catch { setExperiences([]); }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchExperiences(); }, []);
 
   const resetForm = () => { 
     setForm({ 
@@ -99,8 +91,8 @@ const ManageExperience = () => {
     if (logoFile) formData.append('logo', logoFile);
 
     try {
-      if (editing) { await updateExperience(editing, formData); }
-      else { await createExperience(formData); }
+      if (editing) { await experienceService.updateExperience(editing, formData); }
+      else { await experienceService.createExperience(formData); }
       resetForm(); fetchExperiences();
     } catch (err) { alert(err.response?.data?.message || 'Error saving entry'); }
   };
@@ -136,11 +128,11 @@ const ManageExperience = () => {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this entry?')) return;
-    try { await deleteExperience(id); fetchExperiences(); }
+    try { await experienceService.deleteExperience(id); fetchExperiences(); }
     catch (err) { alert(err.response?.data?.message || 'Error'); }
   };
 
-  const onLogoChange = (e) => {
+  const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setLogoFile(file);
@@ -169,17 +161,17 @@ const ManageExperience = () => {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Logo Upload Section */}
               <div className="md:col-span-3 flex flex-col items-center gap-4">
-                <div className="w-32 h-32 rounded-2xl bg-theme-bg border-2 border-dashed border-theme-border flex items-center justify-center overflow-hidden group relative">
+                <label className="w-full aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-dark-700 rounded-3xl cursor-pointer hover:border-accent-500 hover:bg-accent-50/50 dark:hover:bg-accent-900/20 transition-all group overflow-hidden relative bg-slate-50 dark:bg-dark-900/50 shadow-inner">
                   {logoPreview ? (
-                    <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
+                    <img src={logoPreview.startsWith('blob:') ? logoPreview : getImageUrl(logoPreview)} alt="Logo" className="w-full h-full object-contain p-2" />
                   ) : (
-                    <div className="text-center p-2">
-                       <Plus className="w-8 h-8 text-theme-muted mx-auto" />
-                       <span className="text-[10px] text-theme-muted font-medium">Add Logo/Logo</span>
-                    </div>
+                    <>
+                      <ImageIcon size={32} className="text-slate-400 group-hover:text-accent-500 mb-2 transition-colors" />
+                      <span className="text-xs text-slate-500 group-hover:text-accent-600 font-bold">Select Logo</span>
+                    </>
                   )}
-                  <input type="file" onChange={onLogoChange} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*,.svg" />
-                </div>
+                  <input type="file" accept="image/*,.svg" onChange={handleLogoChange} className="hidden" />
+                </label>
                 <p className="text-[11px] text-slate-500 text-center px-4 leading-tight">Recommended: Square logo with transparent background</p>
               </div>
 
@@ -380,11 +372,11 @@ const ManageExperience = () => {
           </div>
         ) : experiences.map(exp => (
           <div key={exp._id} className="group relative flex items-start gap-4 bg-theme-card rounded-2xl p-5 border border-theme-border hover:shadow-xl hover:border-accent-500 transition-all">
-             <div className="w-14 h-14 rounded-xl bg-theme-bg p-2 border border-theme-border flex-shrink-0 flex items-center justify-center overflow-hidden">
+             <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-dark-900/50 border border-slate-100 dark:border-dark-700 flex items-center justify-center p-2.5 shrink-0 shadow-sm relative overflow-hidden">
                 {exp.logo ? (
-                  <img src={exp.logo} alt={exp.company} className="w-full h-full object-contain" />
+                  <img src={getImageUrl(exp.logo)} alt={exp.company} className="w-full h-full object-contain" />
                 ) : (
-                  exp.type === 'education' ? <GraduationCap size={24} className="text-theme-muted" /> : <Briefcase size={24} className="text-theme-muted" />
+                  <Building2 size={24} className="text-slate-300 dark:text-slate-600" />
                 )}
              </div>
 

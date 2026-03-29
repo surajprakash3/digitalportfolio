@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Award, Calendar, Link as LinkIcon, ExternalLink, Image as ImageIcon } from 'lucide-react';
-import { getCertifications, createCertification, updateCertification, deleteCertification } from '../../services/api';
+import { useCertifications } from '../../hooks/useCertifications';
+import { getImageUrl } from '../../utils/imageUtils';
+import * as certificationService from '../../services/certificationService';
 
 const ManageCertifications = () => {
-  const [certifications, setCertifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, refetch: fetchCertifications } = useCertifications();
+  const certifications = data || [];
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   
@@ -19,22 +21,6 @@ const ManageCertifications = () => {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
-
-  const fetchCertifications = async () => {
-    try {
-      const data = await getCertifications();
-      setCertifications(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error fetching certifications:', err);
-      setCertifications([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCertifications();
-  }, []);
 
   const resetForm = () => {
     setForm({
@@ -94,9 +80,9 @@ const ManageCertifications = () => {
 
     try {
       if (editing) {
-        await updateCertification(editing, formData);
+        await certificationService.updateCertification(editing, formData);
       } else {
-        await createCertification(formData);
+        await certificationService.createCertification(formData);
       }
       resetForm();
       fetchCertifications();
@@ -114,7 +100,7 @@ const ManageCertifications = () => {
       credentialId: cert.credentialId || '',
       credentialUrl: cert.credentialUrl || ''
     });
-    setLogoPreview(cert.logo || '');
+    setLogoPreview(cert.logo ? getImageUrl(cert.logo) : '');
     setEditing(cert._id);
     setShowForm(true);
   };
@@ -122,20 +108,12 @@ const ManageCertifications = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this certification?')) {
       try {
-        await deleteCertification(id);
+        await certificationService.deleteCertification(id);
         fetchCertifications();
       } catch (err) {
         alert('Error deleting certification');
       }
     }
-  };
-
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return `${BASE_URL}${url}`;
   };
 
   if (loading) {

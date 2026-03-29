@@ -1,24 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
-import { getAllBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost } from '../../services/api';
+import { useAllBlogPosts } from '../../hooks/useBlog';
+import * as blogService from '../../services/blogService';
 
 const ManageBlog = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, refetch: fetchPosts } = useAllBlogPosts();
+  const posts = data || [];
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ title: '', content: '', excerpt: '', tags: '', published: false });
-
-  const fetchPosts = async () => {
-    try {
-      const data = await getAllBlogPosts();
-      setPosts(Array.isArray(data) ? data : []);
-    } catch { setPosts([]); }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchPosts(); }, []);
 
   const resetForm = () => {
     setForm({ title: '', content: '', excerpt: '', tags: '', published: false });

@@ -1,24 +1,14 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, FileText, Check, AlertCircle } from 'lucide-react';
-import { uploadResume, getResumeStatus } from '../../services/api';
-import { useEffect } from 'react';
+import { useResume } from '../../hooks/useResume';
+import * as resumeService from '../../services/resumeService';
 
 const ManageResume = () => {
-  const [status, setStatus] = useState({ available: false, filename: null });
+  const { data: status = { available: false, filename: null }, refetch: checkStatus } = useResume();
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState(null);
   const fileRef = useRef(null);
-
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const data = await getResumeStatus();
-        setStatus(data);
-      } catch {}
-    };
-    checkStatus();
-  }, []);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -30,9 +20,9 @@ const ManageResume = () => {
     try {
       const formData = new FormData();
       formData.append('resume', file);
-      const data = await uploadResume(formData);
+      const data = await resumeService.uploadResume(formData);
       setMessage({ type: 'success', text: data.message });
-      setStatus({ available: true, filename: data.filename });
+      checkStatus();
     } catch (err) {
       setMessage({ type: 'error', text: err.response?.data?.message || 'Upload failed' });
     } finally {

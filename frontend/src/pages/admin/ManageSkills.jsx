@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, X, Code2 } from 'lucide-react';
-import { getSkills, createSkill, updateSkill, deleteSkill } from '../../services/api';
+import { useSkills } from '../../hooks/useSkills';
+import { getImageUrl } from '../../utils/imageUtils';
+import * as skillService from '../../services/skillService';
 
 const SKILL_STRUCTURE = {
   "Technical Skills": [
@@ -25,14 +27,6 @@ const SKILL_STRUCTURE = {
 
 const CATEGORIES = Object.keys(SKILL_STRUCTURE);
 
-const getImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const BASE_URL = API_URL.replace('/api', '');
-  return `${BASE_URL}${url}`;
-};
-
 const isValidIcon = (iconStr) => {
   return iconStr && iconStr !== 'null' && iconStr !== 'undefined' && iconStr.trim() !== '';
 };
@@ -49,27 +43,17 @@ const ManageSkillImage = ({ skill }) => {
 };
 
 const ManageSkills = () => {
-  const [skills, setSkills] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, refetch: fetchSkills } = useSkills();
+  const skills = data || [];
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
 
   const [form, setForm] = useState({
     name: '',
     category: 'Technical Skills',
-    group: 'Programming Languages',
+    group: SKILL_STRUCTURE['Technical Skills'][0],
     icon: null
   });
-
-  const fetchSkills = async () => {
-    try {
-      const data = await getSkills();
-      setSkills(Array.isArray(data) ? data : []);
-    } catch { setSkills([]); }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchSkills(); }, []);
 
   const resetForm = () => {
     setForm({ name: '', category: 'Technical Skills', group: 'Programming Languages', icon: null });
@@ -97,8 +81,8 @@ const ManageSkills = () => {
         formData.append('icon', form.icon);
       }
 
-      if (editing) { await updateSkill(editing, formData); }
-      else { await createSkill(formData); }
+      if (editing) { await skillService.updateSkill(editing, formData); }
+      else { await skillService.createSkill(formData); }
       resetForm(); fetchSkills();
     } catch (err) { alert(err.response?.data?.message || 'Error saving skill'); }
   };
@@ -118,7 +102,7 @@ const ManageSkills = () => {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this skill?')) return;
-    try { await deleteSkill(id); fetchSkills(); }
+    try { await skillService.deleteSkill(id); fetchSkills(); }
     catch (err) { alert(err.response?.data?.message || 'Error'); }
   };
 

@@ -1,15 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Github, ExternalLink } from 'lucide-react';
-import { getProjects } from '../services/api';
-
-const getImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const BASE_URL = API_URL.replace('/api', '');
-  return `${BASE_URL}${url}`;
-};
+import { useProjects } from '../hooks/useProjects';
+import { getImageUrl } from '../utils/imageUtils';
 
 const cardVariants = {
   hidden: { opacity: 0 },
@@ -175,24 +168,8 @@ const ProjectCard = ({ project }) => {
 };
 
 const Projects = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await getProjects();
-        setProjects(data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load projects. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
+  const { data, loading, error } = useProjects();
+  const projects = data || [];
 
   const containerVariants = {
     hidden: { opacity: 0 },

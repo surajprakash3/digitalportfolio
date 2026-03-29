@@ -1,36 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Tag, Calendar, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getPublishedPosts } from '../services/api';
+import { usePublishedBlogPosts } from '../hooks/useBlog';
 import SEO from '../components/SEO';
 import LazyImage from '../components/LazyImage';
 
 const Blog = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
-  const [allTags, setAllTags] = useState([]);
+  
+  const { data: blogData, loading, error } = usePublishedBlogPosts({ search, tag: selectedTag });
+  const posts = blogData?.posts || [];
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await getPublishedPosts({ search, tag: selectedTag });
-        setPosts(data.posts || []);
-
-        // Extract unique tags
-        const tags = new Set();
-        (data.posts || []).forEach(p => p.tags?.forEach(t => tags.add(t)));
-        setAllTags([...tags]);
-      } catch (error) {
-        console.error('Error fetching blog posts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPosts();
-  }, [search, selectedTag]);
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    posts.forEach(p => p.tags?.forEach(t => tags.add(t)));
+    return [...tags];
+  }, [posts]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -40,14 +27,6 @@ const Blog = () => {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
-  };
-
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return `${BASE_URL}${url}`;
   };
 
   return (

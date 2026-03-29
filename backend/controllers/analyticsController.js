@@ -35,25 +35,32 @@ const getAnalyticsSummary = asyncHandler(async (req, res) => {
     createdAt: { $gte: startDate },
   });
 
-  // Unique visitors
-  const uniqueVisitors = await Analytics.distinct('visitorId', {
-    createdAt: { $gte: startDate },
-  });
+  // Unique visitors (using aggregate to prevent memory issues with large arrays)
+  const uniqueCountResult = await Analytics.aggregate([
+    { $match: { createdAt: { $type: "date", $gte: startDate } } },
+    { $group: { _id: '$visitorId' } },
+    { $count: 'unique' }
+  ]);
+  const uniqueVisitorsCount = uniqueCountResult.length > 0 ? uniqueCountResult[0].unique : 0;
 
   // Views by page
   const viewsByPage = await Analytics.aggregate([
-    { $match: { createdAt: { $gte: startDate } } },
+    { $match: { createdAt: { $type: "date", $gte: startDate } } },
     { $group: { _id: '$page', count: { $sum: 1 } } },
     { $sort: { count: -1 } },
   ]);
 
   // Views over time (daily)
   const viewsOverTime = await Analytics.aggregate([
-    { $match: { createdAt: { $gte: startDate } } },
+    { $match: { createdAt: { $type: "date", $gte: startDate } } },
     {
       $group: {
         _id: {
-          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          $dateToString: { 
+            format: '%Y-%m-%d', 
+            date: '$createdAt',
+            onNull: startDate
+          },
         },
         count: { $sum: 1 },
       },
@@ -63,7 +70,7 @@ const getAnalyticsSummary = asyncHandler(async (req, res) => {
 
   res.json({
     totalViews,
-    uniqueVisitors: uniqueVisitors.length,
+    uniqueVisitors: uniqueVisitorsCount,
     viewsByPage,
     viewsOverTime,
     period: `${days} days`,

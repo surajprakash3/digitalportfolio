@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
+import * as contactService from '../services/contactService';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -22,10 +23,8 @@ const Contact = () => {
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      // In a real app, you'd use axios.post('/api/contact', formData)
+      await contactService.sendMessage(formData);
       setSubmitStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {

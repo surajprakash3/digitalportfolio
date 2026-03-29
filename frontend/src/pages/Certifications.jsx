@@ -1,34 +1,12 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, ExternalLink, Calendar } from 'lucide-react';
-import { getCertifications } from '../services/api';
+import { useCertifications } from '../hooks/useCertifications';
+import { getImageUrl } from '../utils/imageUtils';
 import SEO from '../components/SEO';
 
 const Certifications = () => {
-  const [certifications, setCertifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCertifications = async () => {
-      try {
-        const data = await getCertifications();
-        setCertifications(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Error fetching certifications:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCertifications();
-  }, []);
-
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return `${BASE_URL}${url}`;
-  };
+  const { data, loading, error } = useCertifications();
+  const certifications = data || [];
 
   const containerVariants = {
     hidden: { opacity: 0 },

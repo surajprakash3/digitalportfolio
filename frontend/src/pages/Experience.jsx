@@ -1,25 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion';
 import { Briefcase, Calendar, GraduationCap, MapPin, ExternalLink } from 'lucide-react';
-import { getExperiences } from '../services/api';
+import { useExperiences } from '../hooks/useExperiences';
+import { getImageUrl } from '../utils/imageUtils';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 const Experience = () => {
-  const [experiences, setExperiences] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchExperiences = async () => {
-      try {
-        const data = await getExperiences();
-        setExperiences(data || []);
-      } catch (err) {
-        console.error('Failed to load experiences', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchExperiences();
-  }, []);
+  const { data, loading, error } = useExperiences();
+  const experiences = data || [];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -137,7 +125,7 @@ const Experience = () => {
           {/* Internal Glow Pulse inside icon */}
           <div className="absolute inset-0 bg-gradient-to-tr from-accent-500/20 to-blue-500/20 animate-pulse group-hover/icon:from-accent-500/40 group-hover/icon:to-blue-500/40 pointer-events-none transition-colors duration-300"></div>
           {item.logo ? (
-            <img src={item.logo} alt={item.company} className="w-full h-full object-contain p-1.5 relative z-10" />
+            <img src={getImageUrl(item.logo)} alt={item.company} className="w-full h-full object-contain p-1.5 relative z-10" />
           ) : (
             <div className="text-accent-500 relative z-10">
               {isWork ? <Briefcase size={18} /> : <GraduationCap size={18} />}

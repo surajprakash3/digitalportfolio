@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from 'framer-motion';
 import { ArrowRight, Download, MapPin, Briefcase, GraduationCap, ChevronDown, Terminal, Cpu, Database, Code, Github, Linkedin, Twitter } from 'lucide-react';
-import { getProfile } from '../services/api';
+import { useProfile } from '../hooks/useProfile';
+import { getImageUrl } from '../utils/imageUtils';
 import SEO from '../components/SEO';
 import About from './About';
 import Skills from './Skills';
@@ -86,8 +87,7 @@ const FloatingElement = ({ children, delay = 0, duration = 4, xRange = [-15, 15]
 );
 
 const Home = () => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profile, loading } = useProfile();
 
   // Spotlight & Parallax State
   const containerRef = useRef(null);
@@ -136,20 +136,6 @@ const Home = () => {
     mouseY.set(y);
   };
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        setProfile(data);
-      } catch (err) {
-        console.error('Error loading profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
@@ -163,14 +149,6 @@ const Home = () => {
   const statVariants = {
     hidden: { opacity: 0, scale: 0.9 },
     visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
-  };
-
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace('/api', '');
-    return `${BASE_URL}${url}`;
   };
 
   if (loading) {

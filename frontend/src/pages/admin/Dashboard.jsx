@@ -10,7 +10,11 @@ import {
   CategoryScale, LinearScale, PointElement, LineElement,
   Title, Tooltip, Legend, Filler, ArcElement,
 } from 'chart.js';
-import { getAnalyticsSummary, getProjects, getSkills, getContacts, getAllBlogPosts } from '../../services/api';
+import { useAnalytics } from '../../hooks/useAnalytics';
+import { useProjects } from '../../hooks/useProjects';
+import { useSkills } from '../../hooks/useSkills';
+import { useMessages } from '../../hooks/useMessages';
+import { useAllBlogPosts } from '../../hooks/useBlog';
 import SEO from '../../components/SEO';
 
 // Register Chart.js components
@@ -20,36 +24,24 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
-  const [analytics, setAnalytics] = useState(null);
-  const [stats, setStats] = useState({ projects: 0, skills: 0, messages: 0, posts: 0 });
-  const [loading, setLoading] = useState(true);
+  const { data: analytics, loading: analyticsLoading } = useAnalytics(30);
+  const { data: projectsData } = useProjects();
+  const projects = projectsData || [];
+  const { data: skillsData } = useSkills();
+  const skills = skillsData || [];
+  const { data: messagesData } = useMessages();
+  const messages = messagesData || [];
+  const { data: postsData } = useAllBlogPosts();
+  const posts = postsData || [];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [analyticsData, projects, skills, contacts, posts] = await Promise.all([
-          getAnalyticsSummary(30).catch(() => null),
-          getProjects().catch(() => []),
-          getSkills().catch(() => []),
-          getContacts().catch(() => []),
-          getAllBlogPosts().catch(() => []),
-        ]);
-        
-        setAnalytics(analyticsData);
-        setStats({
-          projects: Array.isArray(projects) ? projects.length : 0,
-          skills: Array.isArray(skills) ? skills.length : 0,
-          messages: Array.isArray(contacts) ? contacts.length : 0,
-          posts: Array.isArray(posts) ? posts.length : 0,
-        });
-      } catch (error) {
-        console.error('Dashboard fetch error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const loading = analyticsLoading;
+
+  const stats = {
+    projects: projects.length,
+    skills: skills.length,
+    messages: messages.length,
+    posts: posts.length,
+  };
 
   const statCards = [
     { label: 'Page Views', value: analytics?.totalViews || 0, icon: Eye, color: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-50 dark:bg-blue-900/20' },

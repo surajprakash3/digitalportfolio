@@ -3,7 +3,7 @@ import { useOutlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import { trackPageView } from '../services/api';
+import { trackPageView } from '../services/analyticsService';
 
 const Layout = () => {
   const location = useLocation();
