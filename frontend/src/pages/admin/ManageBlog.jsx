@@ -90,7 +90,7 @@ const ManageBlog = () => {
               <X size={20} />
             </button>
           </div>
-          
+
           <input
             type="text" placeholder="Post title" required value={form.title}
             onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}

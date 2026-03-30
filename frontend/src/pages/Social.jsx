@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Github, Linkedin, Twitter, Mail, ExternalLink } from 'lucide-react';
 import { useSocials } from '../hooks/useSocials';
+import { getImageUrl } from '../utils/imageUtils';
 
 const CATEGORIES = [
   'Professional Platforms',
@@ -119,7 +120,7 @@ const Social = () => {
                         className="group relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-white/60 dark:bg-dark-800/40 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-dark-700 shadow-sm hover:shadow-xl hover:shadow-accent-500/10 hover:border-accent-500/50 dark:hover:border-accent-500/50 transition-all duration-300 hover:-translate-y-1"
                       >
                         <div className="flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:text-accent-500 transition-colors">
-                          <SocialIcon url={item.url} platform={item.platform} localIcon={item.icon} className="w-10 h-10 sm:w-12 sm:h-12" />
+                          <SocialIcon url={item.url} platform={item.platform} icon={item.icon} className="w-10 h-10 sm:w-12 sm:h-12" />
                         </div>
                       </motion.a>
                     ))}

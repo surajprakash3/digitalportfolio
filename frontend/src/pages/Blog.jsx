@@ -9,7 +9,7 @@ import LazyImage from '../components/LazyImage';
 const Blog = () => {
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
-  
+
   const { data: blogData, loading, error } = usePublishedBlogPosts({ search, tag: selectedTag });
   const posts = blogData?.posts || [];
 
@@ -75,8 +75,8 @@ const Blog = () => {
               <button
                 onClick={() => setSelectedTag('')}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition border ${!selectedTag
-                    ? 'bg-accent-500 text-white border-transparent'
-                    : 'bg-theme-bg text-theme-muted hover:bg-theme-border/50 border-theme-border'
+                  ? 'bg-accent-500 text-white border-transparent'
+                  : 'bg-theme-bg text-theme-muted hover:bg-theme-border/50 border-theme-border'
                   }`}
               >
                 All
@@ -86,8 +86,8 @@ const Blog = () => {
                   key={tag}
                   onClick={() => setSelectedTag(tag)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition border ${selectedTag === tag
-                      ? 'bg-accent-500 text-white border-transparent'
-                      : 'bg-theme-bg text-theme-muted hover:bg-theme-border/50 border-theme-border'
+                    ? 'bg-accent-500 text-white border-transparent'
+                    : 'bg-theme-bg text-theme-muted hover:bg-theme-border/50 border-theme-border'
                     }`}
                 >
                   <Tag size={12} className="inline mr-1" />{tag}
