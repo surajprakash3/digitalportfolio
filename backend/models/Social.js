@@ -20,7 +20,7 @@ const socialSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['Professional Platforms', 'Community Platforms', 'Personal Platforms', 'Other'],
+      enum: ['Professional Platforms', 'Coding Platforms', 'Community Platforms', 'Personal Platforms', 'Other'],
       default: 'Professional Platforms'
     },
     icon: {
