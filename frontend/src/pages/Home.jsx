@@ -13,6 +13,7 @@ import Certifications from './Certifications';
 import Blog from './Blog';
 import Social from './Social';
 import Contact from './Contact';
+import defaultHeroImage from '../assets/hero.png';
 
 const Typewriter = ({ words }) => {
   const [text, setText] = useState('');
@@ -107,17 +108,16 @@ const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-8 items-center w-full z-10 relative">
 
           {/* Mobile Profile Photo (Centered, compact, visible immediately on small screens) */}
-          {profileImage && (
-            <div className="md:hidden flex justify-center -mb-2">
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl p-1 bg-gradient-to-tr from-accent-500 to-blue-500 shadow-xl shadow-accent-500/20">
-                <img
-                  src={getImageUrl(profileImage)}
-                  alt={name}
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              </div>
+          <div className="md:hidden flex justify-center -mb-2">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl p-1 bg-gradient-to-tr from-accent-500 to-blue-500 shadow-xl shadow-accent-500/20">
+              <img
+                src={profileImage ? getImageUrl(profileImage) : defaultHeroImage}
+                alt={name}
+                onError={(e) => { e.currentTarget.src = defaultHeroImage; }}
+                className="w-full h-full object-cover rounded-xl"
+              />
             </div>
-          )}
+          </div>
 
           {/* Left Column: Text & Accents */}
           <motion.div
@@ -231,17 +231,12 @@ const Home = () => {
               {/* Main Profile Glass Card */}
               <div className="w-full h-full bg-theme-card/60 backdrop-blur-xl rounded-2xl p-2 shadow-xl border border-theme-border/50 relative transition-transform duration-300 group-hover:-translate-y-1">
                 <div className="w-full h-full rounded-xl overflow-hidden relative bg-theme-bg shadow-inner">
-                  {profileImage ? (
-                    <img
-                      src={getImageUrl(profileImage)}
-                      alt={name}
-                      className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-theme-muted bg-theme-bg/50">
-                      <span className="font-medium text-base mb-2">No Image Found</span>
-                    </div>
-                  )}
+                  <img
+                    src={profileImage ? getImageUrl(profileImage) : defaultHeroImage}
+                    alt={name}
+                    onError={(e) => { e.currentTarget.src = defaultHeroImage; }}
+                    className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
+                  />
                 </div>
               </div>
 

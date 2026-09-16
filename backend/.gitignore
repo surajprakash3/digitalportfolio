@@ -7,7 +7,8 @@ node_modules/
 !.env.example
 
 # Uploads & logs
-uploads/
+uploads/*
+!uploads/.gitkeep
 *.log
 npm-debug.log*
 

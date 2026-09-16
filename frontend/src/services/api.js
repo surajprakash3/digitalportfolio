@@ -1,6 +1,16 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').trim();
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+// Prefer local backend when developing on localhost to avoid slow cold starts or remote 404s
+let resolvedUrl = rawEnvUrl;
+if (!resolvedUrl || (isLocalhost && resolvedUrl.includes('onrender.com'))) {
+  resolvedUrl = 'http://localhost:5000/api';
+}
+
+resolvedUrl = resolvedUrl.replace(/\/+$/, '');
+const API_URL = resolvedUrl.endsWith('/api') ? resolvedUrl : `${resolvedUrl}/api`;
 
 const api = axios.create({
   baseURL: API_URL,

@@ -52,4 +52,5 @@ Desktop.ini
 fix_git.bat
 fix_git.mjs
 powershell.bat
+*/powershell.bat
 backend/test*.js
