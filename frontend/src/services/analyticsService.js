@@ -5,10 +5,6 @@ export const getAnalyticsSummary = async (days = 30) => {
   return data;
 };
 
-export const getPageViews = async () => {
-  const { data } = await api.get('/analytics/pageviews');
-  return data;
-};
 
 export const trackPageView = async (page) => {
   let visitorId = localStorage.getItem('portfolio_visitor_id');

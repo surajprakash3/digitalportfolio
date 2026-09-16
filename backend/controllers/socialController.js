@@ -1,6 +1,11 @@
 import asyncHandler from 'express-async-handler';
 import Social from '../models/Social.js';
-import cloudinary from 'cloudinary';
+
+const isCloudinaryConfigured =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET;
 
 // @desc    Get all socials
 // @route   GET /api/socials
@@ -24,7 +29,7 @@ const createSocial = asyncHandler(async (req, res) => {
   });
 
   if (req.file) {
-    social.icon = req.file.path;
+    social.icon = isCloudinaryConfigured ? req.file.path : `/uploads/${req.file.filename}`;
     social.iconPublicId = req.file.filename;
   }
 
@@ -51,11 +56,14 @@ const updateSocial = asyncHandler(async (req, res) => {
   social.category = category || social.category;
 
   if (req.file) {
-    // Delete old icon
-    if (social.iconPublicId) {
-      await cloudinary.v2.uploader.destroy(social.iconPublicId);
+    // Delete old icon from Cloudinary if configured
+    if (isCloudinaryConfigured && social.iconPublicId) {
+      try {
+        const { cloudinary } = await import('../config/cloudinary.js');
+        await cloudinary.uploader.destroy(social.iconPublicId);
+      } catch { /* ignore cleanup errors */ }
     }
-    social.icon = req.file.path;
+    social.icon = isCloudinaryConfigured ? req.file.path : `/uploads/${req.file.filename}`;
     social.iconPublicId = req.file.filename;
   }
 
@@ -74,9 +82,12 @@ const deleteSocial = asyncHandler(async (req, res) => {
     throw new Error('Social link not found');
   }
 
-  // Delete icon from Cloudinary
-  if (social.iconPublicId) {
-    await cloudinary.v2.uploader.destroy(social.iconPublicId);
+  // Delete icon from Cloudinary if configured
+  if (isCloudinaryConfigured && social.iconPublicId) {
+    try {
+      const { cloudinary } = await import('../config/cloudinary.js');
+      await cloudinary.uploader.destroy(social.iconPublicId);
+    } catch { /* ignore cleanup errors */ }
   }
 
   await social.deleteOne();

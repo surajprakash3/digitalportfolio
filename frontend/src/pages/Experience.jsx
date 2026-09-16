@@ -1,341 +1,339 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion';
-import { Briefcase, Calendar, GraduationCap, MapPin, ExternalLink } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Briefcase,
+  Calendar,
+  GraduationCap,
+  MapPin,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Download,
+} from 'lucide-react';
 import { useExperiences } from '../hooks/useExperiences';
+import { useProfile } from '../hooks/useProfile';
 import { getImageUrl } from '../utils/imageUtils';
-import AnimatedBackground from '../components/AnimatedBackground';
+import { downloadResume } from '../services/resumeService';
+import SEO from '../components/SEO';
 
-const Experience = () => {
-  const { data, loading, error } = useExperiences();
-  const experiences = data || [];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
-    },
-  };
-
-  const workExperiences = experiences.filter(e => (!e.type || e.type === 'work'));
-  const educationExperiences = experiences.filter(e => e.type === 'education');
-
-  const TimelineEntry = ({ item, isWork, index }) => {
-    const ref = useRef(null);
-    const [isHovered, setIsHovered] = useState(false);
-    
-    // Spotlight and hover macro parallax tracking
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-    
-    const smoothX = useSpring(mouseX, { stiffness: 300, damping: 30, mass: 0.5 });
-    const smoothY = useSpring(mouseY, { stiffness: 300, damping: 30, mass: 0.5 });
-    
-    const spotlightBackground = useMotionTemplate`radial-gradient(600px circle at ${smoothX}px ${smoothY}px, rgba(255,255,255,0.08), transparent 40%)`;
-
-    const { scrollYProgress } = useScroll({
-      target: ref,
-      offset: ["0 1.2", "1 0.4"] // Grows from 0 to 1 as card enters view
-    });
-    
-    // Scale timeline line to track scroll progress
-    const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
-    
-    // Semantic scroll parallax (timeline text slides independently of static line)
-    const cardScrollY = useTransform(scrollYProgress, [0, 1], [25, -25]);
-    
-    // Scroll-based entry (scale + opacity)
-    const cardScale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
-    const cardOpacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
-
-    const entryVariants = {
-      hidden: { x: isWork ? -80 : 80 },
-      visible: { 
-        x: 0, 
-        transition: { 
-          duration: 0.6, 
-          ease: "easeOut", 
-          delay: index * 0.15,
-          when: "beforeChildren",
-          staggerChildren: 0.1
-        } 
-      }
-    };
-
-    const iconVariants = {
-      hidden: { scale: 0, rotate: -30, opacity: 0 },
-      visible: { 
-        scale: 1, 
-        rotate: 0, 
-        opacity: 1,
-        transition: { type: "spring", stiffness: 400, damping: 20, delay: index * 0.15 + 0.1 } 
-      }
-    };
-
-    const textVariants = {
-      hidden: { opacity: 0, y: 15 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
-    };
-    
-    const dateVariants = {
-      hidden: { opacity: 0, y: -15 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
-    };
-
-    const handleMouseMove = (e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      mouseX.set(e.clientX - rect.left);
-      mouseY.set(e.clientY - rect.top);
-    };
-
-    return (
-      <motion.div 
-        ref={ref}
-        key={item._id} 
-        variants={entryVariants} 
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        className="relative pl-8 md:pl-16 pb-12 last:pb-0 group/timeline"
-        style={{ scale: cardScale, opacity: cardOpacity }}
-      >
-        {/* Static Background Vertical line connector for path */}
-        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-theme-border hidden md:block" style={{ left: '23px' }}></div>
-        
-        {/* Animated Fill Vertical line connector overlaying path */}
-        <motion.div 
-          className="absolute left-0 top-0 bottom-0 w-0.5 bg-accent-500 hidden md:block origin-top shadow-[0_0_10px_rgba(6,182,212,0.8)] z-0" 
-          style={{ left: '23px', scaleY }}
-        ></motion.div>
-        
-        {/* Timeline dot/icon/logo */}
-        <motion.div 
-          variants={iconVariants}
-          className="absolute -left-[17px] md:left-0 flex items-center justify-center w-8 h-8 md:w-12 md:h-12 rounded-2xl bg-theme-bg border-[1.5px] border-accent-500 shadow-theme-glow-sm z-10 transition-all duration-300 hover:scale-110 overflow-hidden group/icon hover:shadow-theme-glow cursor-pointer"
-        >
-          {/* Internal Glow Pulse inside icon */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-accent-500/20 to-blue-500/20 animate-pulse group-hover/icon:from-accent-500/40 group-hover/icon:to-blue-500/40 pointer-events-none transition-colors duration-300"></div>
-          {item.logo ? (
-            <img src={getImageUrl(item.logo)} alt={item.company} className="w-full h-full object-contain p-1.5 relative z-10" />
-          ) : (
-            <div className="text-accent-500 relative z-10">
-              {isWork ? <Briefcase size={18} /> : <GraduationCap size={18} />}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Content card Parallax & Floating Wrapper */}
-        <motion.div 
-          style={{ y: cardScrollY }}
-          className="relative z-20"
-        >
-          <motion.div
-            animate={{ y: [-5, 5, -5] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <motion.div 
-              onMouseMove={handleMouseMove}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              whileHover={{ 
-                y: -10, 
-                scale: 1.02, 
-                boxShadow: "var(--theme-glow-lg)",
-                transition: { type: "spring", stiffness: 300, damping: 20 }
-              }}
-              className="bg-theme-card/60 backdrop-blur-xl p-6 md:p-8 rounded-3xl relative transition-all duration-300 border border-theme-border shadow-theme-glow-sm group-hover/timeline:shadow-theme-glow overflow-hidden"
-            >
-            
-            {/* Spotlight Gradient Layer */}
-            <motion.div 
-              className="absolute inset-0 z-0 pointer-events-none transition-opacity duration-300"
-              style={{
-                background: spotlightBackground,
-                opacity: isHovered ? 1 : 0
-              }}
-            />
-            {/* Background Dimming */}
-            <div className={`absolute inset-0 bg-slate-900/5 dark:bg-black/10 z-0 pointer-events-none transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}></div>
-
-            {/* Animated Gradient Border */}
-            <div 
-              className={`absolute inset-0 rounded-3xl pointer-events-none border-[1px] border-transparent bg-gradient-to-r from-accent-500/50 via-blue-500/50 to-accent-500/50 bg-[length:200%_auto] animate-gradient z-20 transition-opacity duration-500`}
-              style={{ WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude", opacity: isHovered ? 1 : 0.4 }}
-            ></div>
-
-        {/* Inner glow layers */}
-        <div className="absolute inset-0 rounded-3xl pointer-events-none border border-white/50 dark:border-white/20 mix-blend-overlay z-20"></div>
-        <div className="absolute inset-0 rounded-3xl pointer-events-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] z-20"></div>
-
-        <div className="relative z-30">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
-            <motion.div variants={{ visible: { transition: { staggerChildren: 0.1 } } }} className="space-y-1">
-              <motion.h3 variants={textVariants} className="text-xl md:text-2xl font-bold font-heading text-theme-text group-hover:text-accent-500 transition-colors">
-                {item.role}
-              </motion.h3>
-              <motion.div variants={textVariants} className="flex flex-wrap items-center gap-2 text-base font-semibold text-theme-muted">
-                <span>{item.company}</span>
-                {item.type === 'work' && item.employmentType && (
-                  <span className="text-theme-muted font-medium px-2 py-0.5 bg-theme-bg rounded-md text-xs uppercase tracking-wider">
-                    {item.employmentType}
-                  </span>
-                )}
-                {item.type === 'education' && item.grade && (
-                  <span className="text-accent-500 font-bold px-2 py-0.5 bg-accent-50 dark:bg-accent-900/20 rounded-md text-xs border border-accent-100 dark:border-accent-900/30">
-                    Grade: {item.grade}
-                  </span>
-                )}
-              </motion.div>
-            </motion.div>
-            
-            <motion.div variants={dateVariants} className="flex flex-col items-start md:items-end gap-2 shrink-0">
-              <motion.div 
-                whileHover={{ scale: 1.05, filter: "brightness(1.1)" }}
-                className="flex items-center text-accent-600 dark:text-accent-400 font-bold bg-accent-50 dark:bg-accent-900/20 px-4 py-1.5 rounded-xl text-sm border border-accent-100 dark:border-accent-900/30 shadow-[0_0_10px_rgba(6,182,212,0.15)] transition-all cursor-default"
-              >
-                <Calendar size={14} className="mr-2" />
-                {item.duration}
-              </motion.div>
-              {item.location && (
-                <div className="flex items-center text-xs text-slate-500 font-medium">
-                  <MapPin size={12} className="mr-1" />
-                  {item.location} {item.locationType && `(${item.locationType})`}
-                </div>
-              )}
-            </motion.div>
-          </div>
-
-          {item.activities && (
-            <motion.div variants={textVariants} className="mb-4 p-3 bg-theme-bg/50 rounded-xl border border-theme-border">
-              <p className="text-[10px] font-bold text-theme-muted uppercase tracking-widest mb-1">Activities & Societies</p>
-              <p className="text-sm text-theme-muted italic">
-                {item.activities}
-              </p>
-            </motion.div>
-          )}
-
-          <motion.p variants={textVariants} className="text-theme-muted leading-relaxed text-base mb-6 border-l-2 border-theme-border pl-4">
-            {item.description}
-          </motion.p>
-
-          <motion.div variants={textVariants} className="flex flex-wrap items-end justify-between gap-6">
-          {item.skills?.length > 0 && (
-            <div className="flex-1">
-              <p className="text-[10px] font-bold text-theme-muted uppercase tracking-widest mb-3">Core Skills & Expertise</p>
-              <div className="flex flex-wrap gap-2">
-                {item.skills.map((skill) => (
-                  <span key={skill} className="px-3 py-1.5 text-xs font-bold text-theme-text bg-theme-bg rounded-lg border border-theme-border shadow-sm hover:border-accent-500/30 transition-colors cursor-default">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {item.link && (
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold hover:scale-105 transition-all shadow-lg active:scale-95">
-              View Project <ExternalLink size={16} />
-            </a>
-          )}
-        </motion.div>
-        </div>
-      </motion.div>
-      </motion.div>
-    </motion.div>
-    </motion.div>
-    );
-  };
+const ExperienceCard = ({ item, isWork }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: '-100px' }}
-        variants={containerVariants}
-      >
-        <div className="text-center mb-16 flex flex-col items-center">
-          <div className="inline-block">
-            <motion.h1
-              className="text-4xl md:text-5xl font-bold font-heading text-theme-text mb-4 flex flex-wrap justify-center"
-            >
-              {["Experience", "&", "Education"].map((word, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.8, ease: "easeOut" }}
-                  className={`inline-block mr-[0.3em] ${word === "Education" ? "text-gradient animate-gradient" : ""}`}
-                >
-                  {word}
-                </motion.span>
-              ))}
-            </motion.h1>
-            <motion.div
-              initial={{ width: 0 }}
-              whileInView={{ width: "100%" }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-              className="h-1.5 bg-accent-500 rounded-full"
-            ></motion.div>
+    <motion.div
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="glass rounded-2xl p-5 border border-slate-200/50 dark:border-dark-700/50 hover:shadow-xl hover:shadow-accent-500/5 transition-all duration-300 flex flex-col justify-between w-[290px] sm:w-[340px] md:w-[370px] shrink-0 snap-start relative overflow-hidden group"
+    >
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-500/30 via-accent-500 to-accent-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+      <div>
+        {/* Header with Logo and Details */}
+        <div className="flex items-start gap-3 mb-3.5">
+          <div className="w-10 h-10 rounded-xl bg-accent-500/10 dark:bg-accent-500/20 border border-accent-500/20 flex items-center justify-center shrink-0 overflow-hidden text-accent-500">
+            {item.logo ? (
+              <img
+                src={getImageUrl(item.logo)}
+                alt={item.company}
+                className="w-full h-full object-contain p-1"
+              />
+            ) : isWork ? (
+              <Briefcase size={18} />
+            ) : (
+              <GraduationCap size={18} />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-bold font-heading text-theme-text truncate group-hover:text-accent-500 transition-colors">
+              {item.role}
+            </h3>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-theme-muted mt-0.5">
+              <span className="font-semibold truncate max-w-[150px]">{item.company}</span>
+              {item.type === 'work' && item.employmentType && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-theme-bg rounded border border-theme-border font-medium uppercase tracking-wider">
+                  {item.employmentType}
+                </span>
+              )}
+              {item.type === 'education' && item.grade && (
+                <span className="text-[10px] text-accent-500 font-bold px-1.5 py-0.5 bg-accent-50 dark:bg-accent-900/20 rounded border border-accent-100 dark:border-accent-900/30">
+                  Grade: {item.grade}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-accent-500 border-t-transparent flex items-center justify-center rounded-full animate-spin"></div>
+        {/* Duration & Location Badges */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <div className="flex items-center text-[11px] font-semibold text-accent-600 dark:text-accent-400 bg-accent-50 dark:bg-accent-900/20 px-2.5 py-1 rounded-full border border-accent-100 dark:border-accent-900/30">
+            <Calendar size={12} className="mr-1.5" />
+            {item.duration}
           </div>
-        ) : experiences.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
-            No experiences found.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-12">
-            
-            {/* Work Experience Section */}
-            <div>
-              <motion.h2 variants={itemVariants} className="text-2xl font-bold font-heading text-theme-text mb-8 flex items-center gap-3">
-                <Briefcase className="text-accent-500" />
-                Work Experience
-              </motion.h2>
-              {workExperiences.length > 0 ? (
-                <div className="relative border-none ml-4 md:ml-6 space-y-10">
-                  {workExperiences.map((item, index) => <TimelineEntry key={item._id} item={item} isWork={true} index={index} />)}
-                </div>
-              ) : (
-                <p className="text-slate-500 pl-4">No work experience listed.</p>
-              )}
+          {item.location && (
+            <div className="flex items-center text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <MapPin size={11} className="mr-1" />
+              <span className="truncate max-w-[130px]">
+                {item.location} {item.locationType && `(${item.locationType})`}
+              </span>
             </div>
+          )}
+        </div>
 
-            {/* Education Section */}
-            <div>
-              <motion.h2 variants={itemVariants} className="text-2xl font-bold font-heading text-theme-text mb-8 flex items-center gap-3">
-                <GraduationCap className="text-accent-500" />
-                Education
-              </motion.h2>
-              {educationExperiences.length > 0 ? (
-                <div className="relative border-none ml-4 md:ml-6 space-y-10">
-                  {educationExperiences.map((item, index) => <TimelineEntry key={item._id} item={item} isWork={false} index={index} />)}
-                </div>
-              ) : (
-                <p className="text-slate-500 pl-4">No education history listed.</p>
-              )}
-            </div>
-
+        {/* Activities (for Education) */}
+        {item.activities && (
+          <div className="mb-3 p-2 bg-theme-bg/60 rounded-lg border border-theme-border text-xs">
+            <p className="text-[9px] font-bold text-theme-muted uppercase tracking-wider mb-0.5">Activities & Societies</p>
+            <p className="text-theme-muted italic line-clamp-2">{item.activities}</p>
           </div>
         )}
-      </motion.div>
-    </div>
+
+        {/* Description with Read more toggle & custom-scrollbar */}
+        {item.description && (
+          <div className="mb-3">
+            <div
+              className={`text-xs text-theme-muted leading-relaxed transition-all duration-300 ${
+                isExpanded
+                  ? 'max-h-32 overflow-y-auto pr-1 custom-scrollbar'
+                  : 'line-clamp-3'
+              }`}
+            >
+              {item.description}
+            </div>
+            {item.description.length > 90 && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-1 text-xs font-semibold text-accent-500 hover:text-accent-400 inline-flex items-center gap-0.5 transition-colors cursor-pointer"
+              >
+                {isExpanded ? (
+                  <>
+                    Show less <ChevronUp size={12} />
+                  </>
+                ) : (
+                  <>
+                    Read more <ChevronDown size={12} />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer: Skills & External Link */}
+      <div className="pt-3 border-t border-theme-border/60 mt-2">
+        {item.skills && item.skills.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {item.skills.map((skill) => (
+              <span
+                key={skill}
+                className="px-2 py-0.5 text-[10px] font-semibold text-theme-text bg-theme-bg rounded border border-theme-border"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {item.link && (
+          <a
+            href={item.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-500 hover:text-accent-400 transition-colors mt-1"
+          >
+            <span>View Details</span>
+            <ExternalLink size={12} />
+          </a>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+const Experience = () => {
+  const { data, loading } = useExperiences();
+  const { data: profile } = useProfile();
+  const experiences = data || [];
+
+  const workScrollRef = useRef(null);
+  const eduScrollRef = useRef(null);
+
+  const scroll = (ref, direction) => {
+    if (ref.current) {
+      const scrollAmount = direction === 'left' ? -340 : 340;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const workExperiences = experiences.filter((e) => !e.type || e.type === 'work');
+  const educationExperiences = experiences.filter((e) => e.type === 'education');
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="animate-pulse space-y-8">
+          <div className="h-8 w-48 bg-slate-200 dark:bg-dark-700 rounded-lg"></div>
+          <div className="flex flex-nowrap overflow-x-auto gap-5 pb-4 scrollbar-hide">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-44 w-[300px] shrink-0 bg-slate-200 dark:bg-dark-700 rounded-2xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <SEO title="Experience & Education" description="My professional work experience and academic background" url="/experience" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        {/* Page Header */}
+        <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 dark:text-white mb-2">
+              Experience & <span className="text-gradient">Education</span>
+            </h1>
+            <div className="w-16 h-1.5 bg-accent-500 rounded-full mb-3"></div>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl">
+              My professional journey, roles, career milestones, and educational background.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Work Experience Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-accent-500/10 text-accent-500">
+                <Briefcase size={20} />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold font-heading text-theme-text">
+                Work Experience
+              </h2>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-theme-bg border border-theme-border text-theme-muted">
+                {workExperiences.length}
+              </span>
+            </div>
+
+            {/* Scroll Navigation */}
+            {workExperiences.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => scroll(workScrollRef, 'left')}
+                  aria-label="Scroll work experience left"
+                  className="p-2 rounded-lg bg-theme-card border border-theme-border text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={() => scroll(workScrollRef, 'right')}
+                  aria-label="Scroll work experience right"
+                  className="p-2 rounded-lg bg-theme-card border border-theme-border text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {workExperiences.length === 0 ? (
+            <div className="text-center py-10 px-4 glass rounded-2xl text-slate-500 text-sm">
+              No work experience listed yet.
+            </div>
+          ) : (
+            <div
+              ref={workScrollRef}
+              className="flex flex-nowrap overflow-x-auto gap-5 pb-5 pt-1 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+            >
+              {workExperiences.map((item) => (
+                <ExperienceCard key={item._id} item={item} isWork={true} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Education Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-accent-500/10 text-accent-500">
+                <GraduationCap size={20} />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold font-heading text-theme-text">
+                Education
+              </h2>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-theme-bg border border-theme-border text-theme-muted">
+                {educationExperiences.length}
+              </span>
+            </div>
+
+            {/* Scroll Navigation */}
+            {educationExperiences.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => scroll(eduScrollRef, 'left')}
+                  aria-label="Scroll education left"
+                  className="p-2 rounded-lg bg-theme-card border border-theme-border text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={() => scroll(eduScrollRef, 'right')}
+                  aria-label="Scroll education right"
+                  className="p-2 rounded-lg bg-theme-card border border-theme-border text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {educationExperiences.length === 0 ? (
+            <div className="text-center py-10 px-4 glass rounded-2xl text-slate-500 text-sm">
+              No education history listed yet.
+            </div>
+          ) : (
+            <div
+              ref={eduScrollRef}
+              className="flex flex-nowrap overflow-x-auto gap-5 pb-5 pt-1 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+            >
+              {educationExperiences.map((item) => (
+                <ExperienceCard key={item._id} item={item} isWork={false} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Resume / CV Download Banner */}
+        <div className="mt-12 glass p-5 rounded-2xl border border-theme-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent-500/10 text-accent-500 flex items-center justify-center shrink-0">
+              <Download size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-theme-text">Looking for my full credentials?</h3>
+              <p className="text-xs text-theme-muted">Download my complete CV with detailed career history, skills, and references.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => downloadResume(profile?.hero?.resumeUrl)}
+            className="px-5 py-2.5 bg-accent-500 hover:bg-accent-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-accent-500/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+          >
+            <Download size={15} />
+            Download Complete CV
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 

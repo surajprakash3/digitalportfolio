@@ -1,4 +1,5 @@
 @echo off
-echo Starting installation... > build.log
-npm install >> build.log 2>&1
-echo Done >> build.log
+echo Installing backend dependencies...
+call npm install --legacy-peer-deps
+echo Dependencies installed successfully!
+pause

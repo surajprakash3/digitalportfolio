@@ -83,14 +83,14 @@ const seedAdmin = asyncHandler(async (req, res) => {
   const admin = await User.create({
     name: 'Suraj',
     email: 'surajprak101@gmail.com',
-    password: 'suraj123',
+    password: '@Aprakash1',
     role: 'admin',
   });
 
   res.status(201).json({
     message: 'Admin user created',
     email: admin.email,
-    defaultPassword: 'admin123456',
+    defaultPassword: '@Aprakash1',
   });
 });
 

@@ -1,6 +1,6 @@
 import React, { Component, useState, useEffect, useMemo, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate, useScroll } from 'framer-motion';
-import { Code2, Users, Wrench, Lightbulb } from 'lucide-react';
+import { Code2, Users, Wrench, Lightbulb, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSkills } from '../hooks/useSkills';
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -114,13 +114,13 @@ const SkillItem = ({ skill }) => {
           rotateY,
           transformStyle: "preserve-3d",
         }}
-        className="flex-shrink-0 flex flex-col items-center justify-center p-3 w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] bg-theme-bg/60 backdrop-blur-md rounded-2xl border border-theme-border shadow-theme-glow-sm transition-all duration-300 cursor-pointer relative group/icon hover:border-accent-500/50"
+        className="flex-shrink-0 flex flex-col items-center justify-center p-2 w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] bg-theme-bg/60 backdrop-blur-md rounded-xl border border-theme-border shadow-theme-glow-sm transition-all duration-300 cursor-pointer relative group/icon hover:border-accent-500/50"
       >
         {!showFallback ? (
           <motion.img
             src={iconSrc}
             alt={skill.name}
-            className="w-10 h-10 sm:w-12 sm:h-12 object-contain relative z-10"
+            className="w-7 h-7 sm:w-8 sm:h-8 object-contain relative z-10"
             onError={() => {
               if (hasStoredIcon) setImgError(true);
               else setDeviconError(true);
@@ -129,11 +129,11 @@ const SkillItem = ({ skill }) => {
             style={{ transform: "translateZ(30px)" }}
           />
         ) : (
-          <span className="text-2xl sm:text-3xl font-bold text-accent-400 relative z-10" style={{ transform: "translateZ(30px)" }}>
+          <span className="text-lg sm:text-xl font-bold text-accent-400 relative z-10" style={{ transform: "translateZ(30px)" }}>
             {skill.name ? skill.name.charAt(0).toUpperCase() : '?'}
           </span>
         )}
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-theme-muted opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none bg-theme-card/90 px-2 py-1 rounded-md border border-theme-border shadow-lg z-30 tracking-widest uppercase">
+        <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold text-theme-muted opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none bg-theme-card/90 px-2 py-0.5 rounded border border-theme-border shadow-lg z-30 tracking-wider uppercase">
           {skill.name}
         </div>
       </motion.div>
@@ -141,12 +141,12 @@ const SkillItem = ({ skill }) => {
   );
 };
 
-const CategoryCard = ({ category, isFullWidth }) => {
+const CategoryCard = ({ category }) => {
   if (!category || !category.icon) return null;
   const IconComponent = category.icon;
   const containerVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, staggerChildren: 0.1 } }
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.08 } }
   };
 
   return (
@@ -154,27 +154,27 @@ const CategoryCard = ({ category, isFullWidth }) => {
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-100px" }}
-      className={`bg-theme-card/40 backdrop-blur-xl p-8 rounded-3xl border border-theme-border shadow-theme-glow-sm hover:shadow-theme-glow transition-all duration-500 ${isFullWidth ? 'md:col-span-2' : ''}`}
+      viewport={{ once: true, margin: "-50px" }}
+      className="bg-theme-card/40 backdrop-blur-xl p-4 sm:p-5 rounded-2xl border border-theme-border shadow-theme-glow-sm hover:shadow-theme-glow transition-all duration-500 w-[260px] sm:w-[290px] md:w-[320px] shrink-0 snap-start flex flex-col h-full"
     >
-      <div className="flex items-center gap-5 mb-10">
-        <div className={`p-4 rounded-2xl bg-gradient-to-br ${category.gradient || 'from-slate-500 to-slate-400'} text-white shadow-lg shadow-accent-500/20`}>
-          <IconComponent size={32} />
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${category.gradient || 'from-slate-500 to-slate-400'} text-white shadow-md shadow-accent-500/20`}>
+          <IconComponent size={20} />
         </div>
         <div>
-          <h3 className="text-2xl font-bold font-heading text-theme-text">{category.title}</h3>
-          <p className="text-xs font-bold text-theme-muted uppercase tracking-widest mt-1">{category.subtitle}</p>
+          <h3 className="text-base sm:text-lg font-bold font-heading text-theme-text">{category.title}</h3>
+          <p className="text-[10px] font-bold text-theme-muted uppercase tracking-wider mt-0.5">{category.subtitle}</p>
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 ${isFullWidth ? 'md:grid-cols-2 lg:grid-cols-3' : ''} gap-10`}>
+      <div className="space-y-4 flex-grow">
         {(category.groups || []).map((group, gIdx) => (
-          <div key={gIdx} className="space-y-4">
-            <h4 className="text-sm font-bold text-theme-text flex items-center gap-2">
+          <div key={gIdx} className="space-y-2">
+            <h4 className="text-[11px] font-bold text-theme-text flex items-center gap-1.5 uppercase tracking-wider text-theme-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-accent-500"></span>
               {group.name}
             </h4>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-2">
               {(group.skills || []).map((skill, sIdx) => (
                 <SkillItem key={sIdx} skill={skill} />
               ))}
@@ -198,9 +198,9 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="py-20 text-center bg-theme-card/20 backdrop-blur-md rounded-3xl border border-theme-border m-4">
-          <h2 className="text-xl font-bold text-theme-text mb-2">Something went wrong</h2>
-          <p className="text-theme-muted">The skills section failed to load. Please refresh the page.</p>
+        <div className="py-16 text-center bg-theme-card/20 backdrop-blur-md rounded-2xl border border-theme-border m-4">
+          <h2 className="text-lg font-bold text-theme-text mb-2">Something went wrong</h2>
+          <p className="text-theme-muted text-sm">The skills section failed to load. Please refresh the page.</p>
         </div>
       );
     }
@@ -211,6 +211,14 @@ class ErrorBoundary extends Component {
 const Skills = () => {
   const { data, loading } = useSkills();
   const dbSkills = typeof data === 'object' && Array.isArray(data) ? data : [];
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -320 : 320;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const categories = useMemo(() => {
     const build = (title, subtitle, icon, gradient, catName, span) => {
@@ -239,27 +247,50 @@ const Skills = () => {
   }, [dbSkills]);
 
   if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="w-10 h-10 border-4 border-accent-500 border-t-transparent rounded-full animate-spin"></div>
+    <div className="flex justify-center py-16">
+      <div className="w-8 h-8 border-3 border-accent-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   return (
     <ErrorBoundary>
-      <section id="skills" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold font-heading text-theme-text mb-4">
-            Expertise & <span className="text-gradient">Skills</span>
-          </h2>
-          <div className="w-20 h-1.5 bg-accent-500 rounded-full mx-auto mb-6"></div>
-          <p className="text-theme-muted max-w-2xl mx-auto text-lg">
-            A comprehensive overview of my technical capabilities and professional strengths.
-          </p>
+      <section id="skills" className="py-14 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-extrabold font-heading text-theme-text mb-3">
+              Expertise & <span className="text-gradient">Skills</span>
+            </h2>
+            <div className="w-16 h-1.5 bg-accent-500 rounded-full mb-3"></div>
+            <p className="text-theme-muted max-w-2xl text-sm sm:text-base">
+              A comprehensive overview of my technical capabilities and professional strengths.
+            </p>
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="flex items-center gap-2 pb-1 shrink-0 ml-4">
+            <button
+              onClick={() => scroll('left')}
+              aria-label="Scroll left"
+              className="p-2 rounded-lg bg-theme-card border border-theme-border text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              aria-label="Scroll right"
+              className="p-2 rounded-lg bg-theme-card border border-theme-border text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+        <div
+          ref={scrollRef}
+          className="flex flex-nowrap overflow-x-auto gap-5 pb-5 pt-1 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+        >
           {categories.map((cat, idx) => (
-            <CategoryCard key={idx} category={cat} isFullWidth={cat.span} />
+            <CategoryCard key={idx} category={cat} />
           ))}
         </div>
       </section>

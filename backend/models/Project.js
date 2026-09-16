@@ -28,6 +28,14 @@ const projectSchema = new mongoose.Schema(
       type: String,
       required: [true, 'At least one technology is required in the tech stack'] 
     }],
+    imagePublicId: {
+      type: String,
+      default: ''
+    },
+    order: {
+      type: Number,
+      default: 0
+    },
   },
   { timestamps: true }
 );

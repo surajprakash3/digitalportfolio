@@ -6,7 +6,7 @@ export const getPublishedPosts = async (params) => {
 };
 
 export const getAllBlogPosts = async () => {
-  const { data } = await api.get('/blog');
+  const { data } = await api.get('/blog/admin/all');
   return data;
 };
 

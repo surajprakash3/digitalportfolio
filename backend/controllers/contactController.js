@@ -39,4 +39,20 @@ const deleteContact = asyncHandler(async (req, res) => {
   res.json({ message: 'Message deleted' });
 });
 
-export { submitContact, getContacts, deleteContact };
+// @desc    Mark a contact message as read
+// @route   PUT /api/contact/:id/read
+// @access  Private
+const markContactAsRead = asyncHandler(async (req, res) => {
+  const contact = await Contact.findById(req.params.id);
+
+  if (!contact) {
+    res.status(404);
+    throw new Error('Message not found');
+  }
+
+  contact.read = true;
+  await contact.save();
+  res.json({ message: 'Message marked as read', contact });
+});
+
+export { submitContact, getContacts, deleteContact, markContactAsRead };

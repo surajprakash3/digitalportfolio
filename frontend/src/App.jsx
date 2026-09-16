@@ -4,13 +4,12 @@ import { AnimatePresence } from 'framer-motion';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ChatBot from './components/ChatBot';
-import CustomCursor from './components/CustomCursor';
 import AnimatedBackground from './components/AnimatedBackground';
-import BackgroundSwitcher from './components/BackgroundSwitcher';
 import { BackgroundProvider } from './context/BackgroundContext';
 
 // Public pages
 const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
 const Skills = lazy(() => import('./pages/Skills'));
 const Projects = lazy(() => import('./pages/Projects'));
 const Experience = lazy(() => import('./pages/Experience'));
@@ -40,6 +39,7 @@ const AnimatedRoutes = () => {
       {/* Public routes */}
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path="about" element={<About />} />
         <Route path="skills" element={<Skills />} />
         <Route path="projects" element={<Projects />} />
         <Route path="certifications" element={<Certifications />} />
@@ -76,7 +76,6 @@ function App() {
   return (
     <BackgroundProvider>
       <BrowserRouter>
-        <CustomCursor />
         <AnimatedBackground />
         <Suspense fallback={
         <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-dark-900">

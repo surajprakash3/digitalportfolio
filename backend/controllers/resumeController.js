@@ -12,10 +12,19 @@ if (!fs.existsSync(RESUME_DIR)) {
   fs.mkdirSync(RESUME_DIR, { recursive: true });
 }
 
+import Profile from '../models/Profile.js';
+
 // @desc    Download current resume
 // @route   GET /api/resume/download
 // @access  Public
 const downloadResume = asyncHandler(async (req, res) => {
+  const profile = await Profile.findOne();
+
+  // If external / Cloudinary resumeUrl is specified
+  if (profile?.hero?.resumeUrl && profile.hero.resumeUrl.trim().startsWith('http')) {
+    return res.redirect(profile.hero.resumeUrl.trim());
+  }
+
   const files = fs.readdirSync(RESUME_DIR).filter(f => 
     f.endsWith('.pdf') || f.endsWith('.doc') || f.endsWith('.docx')
   );
@@ -31,7 +40,10 @@ const downloadResume = asyncHandler(async (req, res) => {
     .sort((a, b) => b.time - a.time)[0];
 
   const filePath = path.join(RESUME_DIR, latest.name);
-  res.download(filePath, `Suraj_Jha_Resume${path.extname(latest.name)}`);
+  const fullName = profile?.hero?.fullName || 'Suraj_Prakash';
+  const downloadName = `${fullName.replace(/\s+/g, '_')}_Resume${path.extname(latest.name)}`;
+  
+  res.download(filePath, downloadName);
 });
 
 // @desc    Upload resume
@@ -64,6 +76,15 @@ const uploadResume = asyncHandler(async (req, res) => {
 // @route   GET /api/resume/status
 // @access  Public
 const getResumeStatus = asyncHandler(async (req, res) => {
+  const profile = await Profile.findOne();
+  if (profile?.hero?.resumeUrl && profile.hero.resumeUrl.trim().startsWith('http')) {
+    return res.json({ 
+      available: true,
+      filename: 'Cloud Resume',
+      downloadUrl: profile.hero.resumeUrl.trim(),
+    });
+  }
+
   const files = fs.readdirSync(RESUME_DIR).filter(f => 
     f.endsWith('.pdf') || f.endsWith('.doc') || f.endsWith('.docx')
   );
@@ -71,6 +92,7 @@ const getResumeStatus = asyncHandler(async (req, res) => {
   res.json({ 
     available: files.length > 0,
     filename: files.length > 0 ? files[0] : null,
+    downloadUrl: '/api/resume/download',
   });
 });
 

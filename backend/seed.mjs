@@ -15,7 +15,7 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 // Update the existing user's password and role
 const salt = await bcrypt.genSalt(10);
-const hashedPassword = await bcrypt.hash('suraj123', salt);
+const hashedPassword = await bcrypt.hash('@Aprakash1', salt);
 
 const result = await User.findOneAndUpdate(
   { email: 'surajprak101@gmail.com' },

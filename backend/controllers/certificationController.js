@@ -1,6 +1,11 @@
 import asyncHandler from 'express-async-handler';
 import Certification from '../models/Certification.js';
-import cloudinary from 'cloudinary';
+
+const isCloudinaryConfigured =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name' &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET;
 
 // @desc    Get all certifications
 // @route   GET /api/certifications
@@ -26,7 +31,7 @@ const createCertification = asyncHandler(async (req, res) => {
   });
 
   if (req.file) {
-    certification.logo = req.file.path;
+    certification.logo = isCloudinaryConfigured ? req.file.path : `/uploads/${req.file.filename}`;
     certification.logoPublicId = req.file.filename;
   }
 
@@ -55,11 +60,14 @@ const updateCertification = asyncHandler(async (req, res) => {
   certification.credentialUrl = credentialUrl !== undefined ? credentialUrl : certification.credentialUrl;
 
   if (req.file) {
-    // Delete old logo
-    if (certification.logoPublicId) {
-      await cloudinary.v2.uploader.destroy(certification.logoPublicId);
+    // Delete old logo from Cloudinary if configured
+    if (isCloudinaryConfigured && certification.logoPublicId) {
+      try {
+        const { cloudinary } = await import('../config/cloudinary.js');
+        await cloudinary.uploader.destroy(certification.logoPublicId);
+      } catch { /* ignore cleanup errors */ }
     }
-    certification.logo = req.file.path;
+    certification.logo = isCloudinaryConfigured ? req.file.path : `/uploads/${req.file.filename}`;
     certification.logoPublicId = req.file.filename;
   }
 
@@ -78,9 +86,12 @@ const deleteCertification = asyncHandler(async (req, res) => {
     throw new Error('Certification not found');
   }
 
-  // Delete logo from Cloudinary
-  if (certification.logoPublicId) {
-    await cloudinary.v2.uploader.destroy(certification.logoPublicId);
+  // Delete logo from Cloudinary if configured
+  if (isCloudinaryConfigured && certification.logoPublicId) {
+    try {
+      const { cloudinary } = await import('../config/cloudinary.js');
+      await cloudinary.uploader.destroy(certification.logoPublicId);
+    } catch { /* ignore cleanup errors */ }
   }
 
   await certification.deleteOne();

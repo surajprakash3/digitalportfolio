@@ -4,6 +4,7 @@ const skillSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+      required: [true, 'Skill name is required'],
       trim: true
     },
     level: {
@@ -21,6 +22,10 @@ const skillSchema = new mongoose.Schema(
     },
     icon: {
       type: String
+    },
+    order: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }

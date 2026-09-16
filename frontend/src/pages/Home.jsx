@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from 'framer-motion';
-import { ArrowRight, Download, MapPin, Briefcase, GraduationCap, ChevronDown, Terminal, Cpu, Database, Code, Github, Linkedin, Twitter } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowRight, Download, Github, Linkedin, Twitter } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
 import { getImageUrl } from '../utils/imageUtils';
+import { downloadResume } from '../services/resumeService';
 import SEO from '../components/SEO';
 import About from './About';
 import Skills from './Skills';
@@ -12,26 +13,6 @@ import Certifications from './Certifications';
 import Blog from './Blog';
 import Social from './Social';
 import Contact from './Contact';
-
-const textVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 12, stiffness: 200 } }
-};
-
-const AnimatedText = ({ text, className }) => (
-  <motion.span
-    className={className}
-    initial="hidden"
-    animate="visible"
-    variants={{ visible: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } } }}
-  >
-    {text.split('').map((char, index) => (
-      <motion.span key={index} variants={textVariants} className="inline-block">
-        {char === ' ' ? '\u00A0' : char}
-      </motion.span>
-    ))}
-  </motion.span>
-);
 
 const Typewriter = ({ words }) => {
   const [text, setText] = useState('');
@@ -67,88 +48,27 @@ const Typewriter = ({ words }) => {
   return (
     <span className="inline-flex items-center text-theme-text font-bold">
       {text}
-      <motion.span
-        animate={{ opacity: [1, 0] }}
-        transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-        className="inline-block w-[3px] h-[1.1em] bg-accent-500 ml-[2px] rounded-full shadow-[0_0_8px_rgba(var(--color-accent-500),0.8)]"
-      />
+      <span className="inline-block w-[3px] h-[1.1em] bg-accent-500 ml-[2px] rounded-full animate-pulse" />
     </span>
   );
 };
 
-const FloatingElement = ({ children, delay = 0, duration = 4, xRange = [-15, 15], yRange = [-20, 20], ...props }) => (
-  <motion.div
-    {...props}
-    animate={{ x: xRange, y: yRange, rotate: [0, 5, -5, 0] }}
-    transition={{ duration, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay }}
-  >
-    {children}
-  </motion.div>
-);
-
 const Home = () => {
   const { data: profile, loading } = useProfile();
 
-  // Spotlight & Parallax State
-  const containerRef = useRef(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  // Smooth springs for tracking parallax objects slowly
-  const springConfig = { damping: 40, stiffness: 100, mass: 0.5 };
-  const parallaxX = useSpring(mouseX, springConfig);
-  const parallaxY = useSpring(mouseY, springConfig);
-
-  // Direct spring for the spotlight mouse overlay
-  const spotX = useSpring(mouseX, { damping: 30, stiffness: 200, mass: 0.2 });
-  const spotY = useSpring(mouseY, { damping: 30, stiffness: 200, mass: 0.2 });
-  const spotlightTemplate = useMotionTemplate`radial-gradient(500px circle at ${spotX}px ${spotY}px, rgba(var(--color-accent-500), 0.08), transparent 80%)`;
-
-  // --- RULE OF HOOKS FIX: Hoist all useTransform hooks before conditional returns ---
-  const floating1X = useTransform(parallaxX, v => v * 0.05 - 50);
-  const floating1Y = useTransform(parallaxY, v => v * 0.05 - 50);
-  
-  const floating2X = useTransform(parallaxX, v => v * -0.04 + 20);
-  const floating2Y = useTransform(parallaxY, v => v * -0.04 - 10);
-  
-  const floating3X = useTransform(parallaxX, v => v * 0.03 + 50);
-  const floating3Y = useTransform(parallaxY, v => v * 0.03 + 50);
-  
-  const floating4X = useTransform(parallaxX, v => v * -0.06 - 30);
-  const floating4Y = useTransform(parallaxY, v => v * -0.06 + 80);
-
-  const heroBgX = useTransform(parallaxX, v => v * -0.05);
-  const heroBgY = useTransform(parallaxY, v => v * -0.05);
-
-  const heroCardX = useTransform(parallaxX, v => v * 0.03);
-  const heroCardY = useTransform(parallaxY, v => v * 0.03);
-
-  const heroChipX = useTransform(parallaxX, v => v * 0.08);
-  const heroChipY = useTransform(parallaxY, v => v * 0.08);
-  // --- END OF HOOKS ---
-
-  const handleMouseMove = (e) => {
-    if (!containerRef.current) return;
-    const { left, top } = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - left;
-    const y = e.clientY - top;
-    mouseX.set(x);
-    mouseY.set(y);
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
   };
 
   const statVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } }
   };
 
   if (loading) {
@@ -182,223 +102,178 @@ const Home = () => {
 
       <section
         id="home"
-        ref={containerRef}
-        onMouseMove={handleMouseMove}
-        className="relative pt-24 pb-16 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden min-h-screen flex items-center group/hero"
+        className="relative pt-12 pb-10 md:pt-16 md:pb-14 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto overflow-hidden min-h-[80vh] flex items-center"
       >
-        {/* Absolute Background Layers */}
-        {/* Spotlight following cursor */}
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-0 opacity-0 group-hover/hero:opacity-100 transition-opacity duration-700 mix-blend-screen"
-          style={{ background: spotlightTemplate }}
-        />
-        
-        {/* Low Opacity Noise Grid Texture */}
-        <div className="pointer-events-none absolute inset-0 z-[1] opacity-[0.03] mix-blend-overlay"
-             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-8 items-center w-full z-10 relative">
 
-        {/* Floating tech elements attached to parallax via transforms manually */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-          <motion.div style={{ x: floating1X, y: floating1Y }} className="absolute top-[20%] right-[15%] opacity-20 hidden md:block">
-            <FloatingElement delay={0} duration={6}><Terminal size={60} className="text-accent-500/50" /></FloatingElement>
-          </motion.div>
-          <motion.div style={{ x: floating2X, y: floating2Y }} className="absolute bottom-[20%] right-[30%] opacity-20 hidden lg:block">
-            <FloatingElement delay={1} duration={8}><Cpu size={70} className="text-accent-500/40" /></FloatingElement>
-          </motion.div>
-          <motion.div style={{ x: floating3X, y: floating3Y }} className="absolute top-[30%] left-[5%] opacity-10 hidden sm:block">
-            <FloatingElement delay={2} duration={5}><Database size={50} className="text-accent-500/60" /></FloatingElement>
-          </motion.div>
-          <motion.div style={{ x: floating4X, y: floating4Y }} className="absolute bottom-[10%] left-[15%] opacity-15 hidden md:block">
-            <FloatingElement delay={1.5} duration={7}><Code size={40} className="text-accent-500/50" /></FloatingElement>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full z-10 relative">
+          {/* Mobile Profile Photo (Centered, compact, visible immediately on small screens) */}
+          {profileImage && (
+            <div className="md:hidden flex justify-center -mb-2">
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl p-1 bg-gradient-to-tr from-accent-500 to-blue-500 shadow-xl shadow-accent-500/20">
+                <img
+                  src={getImageUrl(profileImage)}
+                  alt={name}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Left Column: Text & Accents */}
           <motion.div
-            className="lg:col-span-7 flex flex-col justify-center text-center lg:text-left relative z-10"
+            className="md:col-span-7 flex flex-col justify-center text-center md:text-left relative z-10"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            {/* Badges / Availability */}
-            {available && (
-              <motion.div variants={itemVariants} className="mb-6 inline-flex items-center space-x-2 bg-accent-500/10 text-accent-500 px-4 py-2 rounded-full border border-accent-500/30 shadow-[0_0_15px_rgba(var(--color-accent-500),0.15)] mx-auto lg:mx-0 backdrop-blur-md">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-500"></span>
-                </span>
-                <span className="text-xs font-bold tracking-wide uppercase">Open to new opportunities</span>
-              </motion.div>
-            )}
-
             {/* Hero Headers */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold font-heading mb-4 tracking-tight leading-tight relative z-20">
-               {/* Soft Glowing Radial Light behind Name */}
-              <div className="absolute inset-0 bg-accent-500/15 blur-[60px] rounded-full scale-150 animate-pulse -z-10 w-1/2 h-1/2 left-[25%] top-[25%] mix-blend-plus-lighter pointer-events-none"></div>
-              
-              <motion.span variants={itemVariants} className="inline-block mr-4 text-theme-text drop-shadow-md">Hi, I'm</motion.span>
-              <AnimatedText text={name} className="bg-clip-text text-transparent bg-gradient-to-r from-accent-400 via-accent-300 to-blue-500 relative inline-block pb-2 animate-gradient drop-shadow-lg" />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-heading mb-2 tracking-tight leading-tight relative z-20">
+              <motion.span variants={itemVariants} className="inline-block mr-2 text-theme-text">Hi, I'm</motion.span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent-400 via-accent-300 to-blue-500 relative inline-block pb-0.5">{name}</span>
             </h1>
 
-            <motion.h2 variants={itemVariants} className="text-2xl md:text-3xl font-bold opacity-90 mb-6 font-heading flex flex-wrap items-center justify-center lg:justify-start gap-2 h-10 md:h-12 overflow-hidden">
+            <motion.h2 variants={itemVariants} className="text-lg sm:text-xl font-bold opacity-90 mb-3 font-heading flex flex-wrap items-center justify-center md:justify-start gap-2 h-7 sm:h-8 overflow-hidden">
                <span className="text-theme-muted">I am a </span> <Typewriter words={titleWords} />
             </motion.h2>
 
-            {/* Impact Statements */}
-            <motion.div variants={itemVariants} className="space-y-4 mb-8 text-lg text-theme-muted max-w-2xl mx-auto lg:mx-0">
-              <p className="font-semibold text-theme-text text-xl leading-relaxed">
+            {/* Impact Statement */}
+            <motion.div variants={itemVariants} className="mb-4 text-theme-muted max-w-lg mx-auto md:mx-0">
+              <p className="font-semibold text-theme-text text-sm sm:text-base leading-relaxed">
                 {tagline}
               </p>
-              <p className="text-sm font-medium leading-relaxed drop-shadow-sm">{shortDescription}</p>
+              {shortDescription && shortDescription !== tagline && (
+                <p className="text-xs sm:text-sm font-medium leading-relaxed text-theme-muted mt-1">{shortDescription}</p>
+              )}
             </motion.div>
 
             {/* Premium Animated Stats Section */}
-            <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-10 border-y border-theme-border/50 py-4 w-full md:w-max">
-              <motion.div variants={statVariants} className="flex flex-col items-center lg:items-start group">
-                 <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-accent-300 transform group-hover:scale-110 transition-transform">{stats.projects}</span>
-                 <span className="text-xs font-bold text-theme-muted uppercase tracking-wider mt-1">Projects</span>
+            <motion.div variants={itemVariants} className="flex items-center justify-center md:justify-start gap-4 sm:gap-6 mb-5 border-y border-theme-border/40 py-2 w-full md:w-max mx-auto md:mx-0">
+              <motion.div variants={statVariants} className="flex flex-col items-center md:items-start group">
+                 <span className="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-accent-300">{stats.projects}</span>
+                 <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider mt-0.5">Projects</span>
               </motion.div>
-              <div className="w-px h-10 bg-theme-border/50 hidden sm:block"></div>
-              <motion.div variants={statVariants} className="flex flex-col items-center lg:items-start group">
-                 <span className="text-2xl font-black text-theme-text transform group-hover:scale-110 transition-transform">{stats.experience}</span>
-                 <span className="text-xs font-bold text-theme-muted uppercase tracking-wider mt-1">Experience</span>
+              <div className="w-px h-7 bg-theme-border/40"></div>
+              <motion.div variants={statVariants} className="flex flex-col items-center md:items-start group">
+                 <span className="text-lg sm:text-xl font-black text-theme-text">{stats.experience}</span>
+                 <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider mt-0.5">Experience</span>
               </motion.div>
-              <div className="w-px h-10 bg-theme-border/50 hidden sm:block"></div>
-              <motion.div variants={statVariants} className="flex flex-col items-center lg:items-start group">
-                 <span className="text-2xl font-black text-theme-text transform group-hover:scale-110 transition-transform">{stats.contributions}</span>
-                 <span className="text-xs font-bold text-theme-muted uppercase tracking-wider mt-1">Contributions</span>
+              <div className="w-px h-7 bg-theme-border/40"></div>
+              <motion.div variants={statVariants} className="flex flex-col items-center md:items-start group">
+                 <span className="text-lg sm:text-xl font-black text-theme-text">{stats.contributions}</span>
+                 <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider mt-0.5">Contributions</span>
               </motion.div>
             </motion.div>
 
             {/* Call to Actions Enhancement */}
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5">
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3">
               <motion.a 
                 href="#projects" 
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white overflow-hidden rounded-2xl border border-transparent hover:shadow-[0_0_20px_rgba(var(--color-accent-500),0.4)] w-full sm:w-auto"
+                className="group relative inline-flex items-center justify-center px-5 py-2.5 text-xs sm:text-sm font-bold text-white overflow-hidden rounded-xl border border-transparent shadow-md shadow-accent-500/20 w-full sm:w-auto cursor-pointer"
               >
-                {/* Animated flowing gradient layer */}
                 <div className="absolute inset-0 bg-gradient-to-r from-accent-600 via-accent-400 to-accent-600 bg-[length:200%_auto] animate-gradient z-0"></div>
-                {/* Ripple overlay on hover */}
                 <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors z-0"></div>
                 <span className="relative z-10 flex items-center">
                   View My Work
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1.5 transition-transform duration-300" />
+                  <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1.5 transition-transform duration-300" />
                 </span>
               </motion.a>
               
-              <motion.a 
-                href={(resumeUrl) ? resumeUrl : "/api/resume/download"}
+              <motion.button 
+                type="button"
+                onClick={() => downloadResume(resumeUrl)}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-theme-text transition-all duration-300 bg-theme-card/60 backdrop-blur-md hover:bg-theme-bg/80 hover:text-accent-500 rounded-2xl border border-theme-border w-full sm:w-auto shadow-[0_0_15px_rgba(0,0,0,0.1)] hover:shadow-[0_0_25px_rgba(var(--color-accent-500),0.2)] tracking-wide" 
-                download
+                className="inline-flex items-center justify-center px-5 py-2.5 text-xs sm:text-sm font-bold text-theme-text transition-all duration-300 bg-theme-card/60 backdrop-blur-md hover:bg-theme-bg/80 hover:text-accent-500 rounded-xl border border-theme-border w-full sm:w-auto shadow-sm tracking-wide cursor-pointer" 
               >
-                <Download className="w-5 h-5 mr-2" />
+                <Download className="w-4 h-4 mr-1.5" />
                 Download CV
-              </motion.a>
+              </motion.button>
             </motion.div>
 
             {/* Social Links under CTA */}
-            <motion.div variants={itemVariants} className="flex items-center justify-center lg:justify-start gap-4 mt-8">
+            <motion.div variants={itemVariants} className="flex items-center justify-center md:justify-start gap-2.5 mt-4">
                 {socials?.githubUrl && (
-                    <motion.a whileHover={{ y: -3, scale: 1.1 }} title='GitHub' href={socials.githubUrl} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-theme-card border border-theme-border flex items-center justify-center text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-colors">
-                        <Github size={18} />
+                    <motion.a whileHover={{ y: -2, scale: 1.08 }} title='GitHub' href={socials.githubUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-theme-card border border-theme-border flex items-center justify-center text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-colors">
+                        <Github size={15} />
                     </motion.a>
                 )}
                 {socials?.linkedinUrl && (
-                    <motion.a whileHover={{ y: -3, scale: 1.1 }} title='LinkedIn' href={socials.linkedinUrl} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-theme-card border border-theme-border flex items-center justify-center text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-colors">
-                        <Linkedin size={18} />
+                    <motion.a whileHover={{ y: -2, scale: 1.08 }} title='LinkedIn' href={socials.linkedinUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-theme-card border border-theme-border flex items-center justify-center text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-colors">
+                        <Linkedin size={15} />
                     </motion.a>
                 )}
                 {socials?.twitterUrl && (
-                    <motion.a whileHover={{ y: -3, scale: 1.1 }} title='Twitter' href={socials.twitterUrl} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-theme-card border border-theme-border flex items-center justify-center text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-colors">
-                        <Twitter size={18} />
+                    <motion.a whileHover={{ y: -2, scale: 1.08 }} title='Twitter' href={socials.twitterUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-theme-card border border-theme-border flex items-center justify-center text-theme-muted hover:text-accent-500 hover:border-accent-500/50 shadow-sm transition-colors">
+                        <Twitter size={15} />
                     </motion.a>
                 )}
             </motion.div>
           </motion.div>
 
-          {/* Right Column: Image & Glassmorphism Upgraded Parallax */}
+          {/* Desktop Right Column: Image */}
           <motion.div
-            className="lg:col-span-5 relative mt-16 lg:mt-0 flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            className="hidden md:flex md:col-span-5 relative items-center justify-center md:justify-end"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
           >
-            {/* Massive Parallax Backdrop Blob */}
-            <motion.div 
-               style={{ x: heroBgX, y: heroBgY }}
-               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-gradient-to-tr from-accent-500/20 to-accent-300/10 blur-[80px] rounded-[50%] -z-10 transition-colors duration-700" 
+            {/* Ambient Backdrop Glow */}
+            <div 
+               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-gradient-to-tr from-accent-500/20 to-accent-300/10 blur-[80px] rounded-full -z-10 pointer-events-none" 
             />
 
-            <motion.div 
-              style={{ x: heroCardX, y: heroCardY }}
-              className="relative w-full aspect-[4/5] max-w-xs sm:max-w-sm mx-auto lg:ml-auto group cursor-pointer perspective-1000"
-            >
-              {/* Spinning / Glowing Layered Border Behind Profile */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-accent-600 via-blue-500 to-accent-400 rounded-[2.5rem] opacity-30 blur-md group-hover:opacity-70 group-hover:duration-300 transition-opacity animate-gradient"></div>
+            <div className="relative w-full aspect-[4/5] max-w-[240px] lg:max-w-[270px] group">
+              {/* Glowing Border Behind Profile */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-accent-600 via-blue-500 to-accent-400 rounded-2xl opacity-30 blur-md group-hover:opacity-60 transition-opacity"></div>
               
-              {/* Main Profile Glass Card with Floating hover animation */}
-              <motion.div
-                animate={{ y: [0, -12, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="w-full h-full bg-theme-card/40 backdrop-blur-2xl rounded-[2.2rem] p-2.5 shadow-[0_0_20px_rgba(0,0,0,0.1)] group-hover:shadow-[0_0_40px_rgba(var(--color-accent-500),0.3)] border border-theme-border/50 relative transition-all duration-500 group-hover:block-layer"
-              >
-                <div className="w-full h-full rounded-[1.8rem] overflow-hidden relative bg-theme-bg shadow-inner transition-colors duration-500">
+              {/* Main Profile Glass Card */}
+              <div className="w-full h-full bg-theme-card/60 backdrop-blur-xl rounded-2xl p-2 shadow-xl border border-theme-border/50 relative transition-transform duration-300 group-hover:-translate-y-1">
+                <div className="w-full h-full rounded-xl overflow-hidden relative bg-theme-bg shadow-inner">
                   {profileImage ? (
                     <img
                       src={getImageUrl(profileImage)}
                       alt={name}
-                      className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110 opacity-95 group-hover:opacity-100 mix-blend-luminosity hover:mix-blend-normal"
+                      className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-theme-muted bg-theme-bg/50">
-                      <span className="font-medium text-lg mb-2">No Image Found</span>
+                      <span className="font-medium text-base mb-2">No Image Found</span>
                     </div>
                   )}
-                  {/* Subtle vignette inner shadow */}
-                  <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(0,0,0,0.3)] pointer-events-none rounded-[1.8rem]"></div>
                 </div>
-              </motion.div>
+              </div>
 
-              {/* Parallax Floating Years of Experience Chip */}
+              {/* Years of Experience Chip */}
               {(stats.experience) && (
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  style={{ x: heroChipX, y: heroChipY }}
-                  transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
-                  className="absolute -bottom-8 -left-4 lg:-left-12 bg-theme-card/90 backdrop-blur-2xl px-6 py-4 rounded-2xl shadow-[0_10px_40px_rgba(var(--color-accent-500),0.2)] flex items-center gap-4 border border-theme-border/40 z-20 transition-all duration-500 hover:-translate-y-2 hover:scale-105 cursor-default"
+                <div
+                  className="absolute -bottom-3 -left-3 bg-theme-card/95 backdrop-blur-xl px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2 border border-theme-border/60 z-20 cursor-default"
                 >
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-500 to-blue-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg ring-4 ring-theme-bg">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent-500 to-blue-500 flex items-center justify-center text-white font-extrabold text-xs shadow-md">
                     {String(stats.experience).split('+')[0].split(' ')[0]}+
                   </div>
                   <div>
-                    <p className="text-[10px] text-theme-muted font-black tracking-widest uppercase leading-tight mb-0.5">Years</p>
-                    <p className="font-extrabold text-theme-text text-lg leading-tight tracking-tight">Experience</p>
+                    <p className="text-[8px] text-theme-muted font-bold tracking-wider uppercase leading-tight">Years</p>
+                    <p className="font-bold text-theme-text text-[11px] leading-tight">Experience</p>
                   </div>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           </motion.div>
 
         </div>
 
         {/* Scroll Indicator & Glowing Target Divider */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-20">
-           <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-theme-muted mb-2 opacity-50">Scroll</span>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-20">
+           <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-theme-muted mb-1 opacity-50">Scroll</span>
            <motion.div
-             animate={{ y: [0, 8, 0] }}
+             animate={{ y: [0, 6, 0] }}
              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-             className="w-6 h-10 border-2 border-theme-muted/40 rounded-full flex justify-center p-1 backdrop-blur-sm"
+             className="w-5 h-8 border-2 border-theme-muted/40 rounded-full flex justify-center p-0.5 backdrop-blur-sm"
            >
              <motion.div 
-                animate={{ y: [0, 10, 0], opacity: [1, 0, 1] }}
+                animate={{ y: [0, 8, 0], opacity: [1, 0, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 className="w-1.5 h-1.5 bg-accent-500 rounded-full" 
              />

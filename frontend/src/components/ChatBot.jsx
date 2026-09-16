@@ -100,24 +100,50 @@ const ChatBot = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex items-start gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  <div className={`flex items-start gap-2 max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                       msg.role === 'user' 
                         ? 'bg-accent-100 dark:bg-accent-900/30 text-accent-600' 
                         : 'bg-slate-100 dark:bg-dark-700 text-slate-600 dark:text-slate-300'
                     }`}>
                       {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
                     </div>
-                    <div className={`px-3 py-2 rounded-2xl text-sm leading-relaxed ${
+                    <div className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm ${
                       msg.role === 'user'
-                        ? 'bg-accent-500 text-white rounded-br-md'
-                        : 'bg-slate-100 dark:bg-dark-700 text-slate-700 dark:text-slate-200 rounded-bl-md'
+                        ? 'bg-accent-500 text-white rounded-br-sm'
+                        : 'bg-slate-100 dark:bg-dark-700 text-slate-700 dark:text-slate-200 rounded-bl-sm border border-slate-200/50 dark:border-dark-600/50'
                     }`}>
                       {msg.content}
                     </div>
                   </div>
                 </div>
               ))}
+
+              {/* Quick suggestion chips if only initial greeting is present */}
+              {messages.length === 1 && (
+                <div className="pt-2 flex flex-wrap gap-1.5">
+                  {[
+                    'Show certifications 📜',
+                    'Featured projects 💻',
+                    'Work experience 💼',
+                    'Contact info ✉️'
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setInput(chip);
+                        setTimeout(() => {
+                          const sendBtn = document.getElementById('chatbot-send');
+                          if (sendBtn) sendBtn.click();
+                        }, 50);
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-full bg-slate-100 dark:bg-dark-700 hover:bg-accent-500 hover:text-white dark:hover:bg-accent-600 text-slate-600 dark:text-slate-300 transition-colors border border-slate-200/70 dark:border-dark-600 text-left"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              )}
               
               {isTyping && (
                 <div className="flex justify-start">
