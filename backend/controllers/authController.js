@@ -1,7 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
-import bcrypt from 'bcryptjs';
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -95,25 +94,4 @@ const seedAdmin = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Temporary: Reset admin password
-// @route   POST /api/auth/reset-admin
-// @access  Public (REMOVE AFTER USE)
-const resetAdminPassword = asyncHandler(async (req, res) => {
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash('@Aprakash1', salt);
-
-  const result = await User.findOneAndUpdate(
-    { email: 'surajprak101@gmail.com' },
-    { $set: { password: hashedPassword, role: 'admin' } },
-    { new: true }
-  );
-
-  if (result) {
-    res.json({ message: 'Admin password reset successfully', email: result.email });
-  } else {
-    res.status(404);
-    throw new Error('Admin user not found');
-  }
-});
-
-export { registerUser, loginUser, getMe, seedAdmin, resetAdminPassword };
+export { registerUser, loginUser, getMe, seedAdmin };
