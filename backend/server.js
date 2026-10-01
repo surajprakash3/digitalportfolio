@@ -34,6 +34,8 @@ app.use(cors({
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'https://surajprakash.vercel.app',
+    'https://digitalportfolio-surajprakash3s-projects.vercel.app',
+    'https://digitalportfolio-git-main-surajprakash3s-projects.vercel.app',
   ],
   credentials: true,
 }));
