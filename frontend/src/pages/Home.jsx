@@ -259,21 +259,8 @@ const Home = () => {
 
         </div>
 
-        {/* Scroll Indicator & Glowing Target Divider */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-20">
-           <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-theme-muted mb-1 opacity-50">Scroll</span>
-           <motion.div
-             animate={{ y: [0, 6, 0] }}
-             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-             className="w-5 h-8 border-2 border-theme-muted/40 rounded-full flex justify-center p-0.5 backdrop-blur-sm"
-           >
-             <motion.div 
-                animate={{ y: [0, 8, 0], opacity: [1, 0, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="w-1.5 h-1.5 bg-accent-500 rounded-full" 
-             />
-           </motion.div>
-        </div>
+
+
         
         {/* Animated Glow Border Divider at very bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent-500/50 to-transparent"></div>
